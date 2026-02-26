@@ -1,0 +1,112 @@
+import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
+import Navbar from '@/components/Navbar';
+import PageHeader from '@/components/PageHeader';
+import EmptyState from '@/components/EmptyState';
+import Modal from '@/components/Modal';
+import TeamPanel from '@/components/TeamPanel';
+import { FormField, FormInput } from '@/components/FormElements';
+import { useAppState } from '@/context/AppContext';
+import { useAdminApi } from '@/services/api';
+
+export default function CompanyDashboardPage() {
+  const { company, teams, setTeams, setRadarIds } = useAppState();
+  const [teamModalOpen, setTeamModalOpen] = useState(false);
+  const [newTeam, setNewTeam] = useState({ name: '', purpose: '', context: '', level: '1' });
+
+  useEffect(() => { loadTeams(); loadRadarList(); }, []);
+
+  const loadTeams = async () => {
+    try {
+      const r = await useAdminApi.getTeamList();
+      setTeams((r.data || []).filter((t: any) => t.organizationId === company.orgId));
+    } catch { setTeams([]); }
+  };
+
+  const loadRadarList = async () => {
+    try {
+      const r = await useAdminApi.getRadarList();
+      const ids: Record<string, string> = {};
+      (r.data || []).forEach((radar: any) => {
+        if (radar.teamId && radar.radarId) ids[radar.teamId] = radar.radarId;
+      });
+      setRadarIds(ids);
+    } catch {}
+  };
+
+  const createTeam = async () => {
+    if (!newTeam.name.trim()) return toast.error('Name required');
+    const payload = {
+      organizationId: company.orgId,
+      adminAccountId: company.adminId,
+      organizationName: company.orgName,
+      name: newTeam.name,
+      purpose: newTeam.purpose,
+      context: newTeam.context,
+      level: parseInt(newTeam.level) || 1,
+    };
+    try {
+      await useAdminApi.createTeam(payload, company.sid!);
+      setTeamModalOpen(false);
+      setNewTeam({ name: '', purpose: '', context: '', level: '1' });
+      toast.success(`Team "${newTeam.name}" created`);
+      setTimeout(loadTeams, 1500);
+    } catch (e: any) { toast.error(`Error: ${e.message}`); }
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      <Navbar variant="company" />
+      <div className="flex-1 grid grid-cols-[220px_1fr] min-h-0">
+        <aside className="border-r border-border bg-card sticky top-[61px] h-[calc(100vh-61px)] overflow-y-auto p-5">
+          <div className="font-mono text-[9px] text-muted-foreground/60 tracking-[2px] uppercase px-2 mb-2">Company</div>
+          <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-sidebar-accent text-sidebar-accent-foreground border border-primary/20 text-sm font-semibold cursor-pointer">
+            <span>👥</span> Teams & Radar
+          </div>
+          <div className="mt-6">
+            <div className="font-mono text-[9px] text-muted-foreground/60 tracking-[2px] uppercase px-2 mb-2">Session</div>
+            <div className="px-2 font-mono text-[10px] text-muted-foreground leading-relaxed">
+              Role: <span className="text-foreground">{company.role || '—'}</span><br />
+              Org: <span className="text-foreground">{company.orgName || '—'}</span>
+            </div>
+          </div>
+        </aside>
+
+        <main className="p-7 overflow-y-auto">
+          <PageHeader
+            title="Teams & Radar"
+            subtitle="// click a team to view and manage its radar elements"
+            actions={
+              <button onClick={() => setTeamModalOpen(true)} className="border border-border-strong bg-card text-muted-foreground hover:text-foreground hover:border-primary rounded-lg px-5 py-2.5 font-bold text-sm transition-all">
+                + New Team
+              </button>
+            }
+          />
+
+          {teams.length === 0 ? (
+            <EmptyState icon="👥" message="No teams yet. Create the first one." />
+          ) : (
+            <div className="space-y-4">
+              {teams.map(team => (
+                <TeamPanel key={team.teamId} team={team} onRefresh={() => { loadTeams(); loadRadarList(); }} />
+              ))}
+            </div>
+          )}
+        </main>
+      </div>
+
+      <Modal open={teamModalOpen} onClose={() => setTeamModalOpen(false)} title="New Team" subtitle="// add a team to your organization">
+        <FormField label="Team Name"><FormInput value={newTeam.name} onChange={e => setNewTeam(p => ({ ...p, name: e.target.value }))} placeholder="Strategy Team" /></FormField>
+        <FormField label="Purpose"><FormInput value={newTeam.purpose} onChange={e => setNewTeam(p => ({ ...p, purpose: e.target.value }))} placeholder="Drive strategic initiatives" /></FormField>
+        <div className="grid grid-cols-2 gap-3">
+          <FormField label="Context"><FormInput value={newTeam.context} onChange={e => setNewTeam(p => ({ ...p, context: e.target.value }))} placeholder="Executive" /></FormField>
+          <FormField label="Level"><FormInput type="number" value={newTeam.level} onChange={e => setNewTeam(p => ({ ...p, level: e.target.value }))} min={1} max={10} /></FormField>
+        </div>
+        <div className="flex gap-2.5 mt-5">
+          <button onClick={() => setTeamModalOpen(false)} className="flex-1 border border-border-strong bg-card text-muted-foreground rounded-lg py-2.5 font-bold text-sm hover:text-foreground transition-all">Cancel</button>
+          <button onClick={createTeam} className="flex-1 bg-success text-success-foreground rounded-lg py-2.5 font-bold text-sm hover:opacity-90 transition-all shadow-md">Create Team</button>
+        </div>
+      </Modal>
+    </div>
+  );
+}
