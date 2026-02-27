@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { ArrowRight, Shield, Building2 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 
 export default function HomePage() {
@@ -8,45 +9,41 @@ export default function HomePage() {
   return (
     <div className="min-h-screen grid-bg">
       <Navbar variant="home" />
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-10 py-20 text-center">
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-10 py-24 text-center">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <span className="inline-block font-mono text-[11px] text-primary tracking-[3px] uppercase mb-5 bg-primary/8 border border-primary/20 px-3.5 py-1.5 rounded-full">
+          <span className="inline-block font-mono text-[10px] text-muted-foreground tracking-[3px] uppercase mb-6 border border-border px-4 py-1.5 rounded-full">
             Strategic Intelligence Platform
           </span>
-          <h1 className="text-6xl md:text-7xl font-extrabold leading-none tracking-tight mb-4">
-            Know what's<br /><span className="text-primary">coming</span>
+          <h1 className="text-6xl md:text-7xl font-extrabold leading-[0.95] tracking-tight mb-5">
+            Know what's<br /><span className="text-muted-foreground">coming.</span>
           </h1>
-          <p className="font-mono text-sm text-muted-foreground mb-14 max-w-md mx-auto">
+          <p className="font-mono text-sm text-muted-foreground mb-16 max-w-md mx-auto leading-relaxed">
             Detect, assess and respond to threats and opportunities before they hit your organization.
           </p>
         </motion.div>
 
         <motion.div
-          className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full max-w-[700px]"
+          className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-[680px]"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
           <HomeCard
-            icon="🏛️"
+            icon={<Shield className="w-5 h-5" />}
             label="Platform Admin"
             title="SaaS Administration"
-            desc="Create and manage organizations across the platform. Provision company accounts and admins."
-            cta="Enter as platform admin →"
-            variant="primary"
+            desc="Create and manage organizations across the platform."
             onClick={() => navigate('/login/platform')}
           />
           <HomeCard
-            icon="🏢"
+            icon={<Building2 className="w-5 h-5" />}
             label="Company Admin"
             title="Company View"
-            desc="Manage your teams and radar elements. Track strategic signals across your organization."
-            cta="Enter your company →"
-            variant="success"
+            desc="Manage your teams and radar elements."
             onClick={() => navigate('/login/company')}
           />
         </motion.div>
@@ -56,33 +53,30 @@ export default function HomePage() {
 }
 
 interface HomeCardProps {
-  icon: string;
+  icon: React.ReactNode;
   label: string;
   title: string;
   desc: string;
-  cta: string;
-  variant: 'primary' | 'success';
   onClick: () => void;
 }
 
-function HomeCard({ icon, label, title, desc, cta, variant, onClick }: HomeCardProps) {
-  const isPrimary = variant === 'primary';
+function HomeCard({ icon, label, title, desc, onClick }: HomeCardProps) {
   return (
     <motion.div
-      whileHover={{ y: -4, boxShadow: '0 12px 32px rgba(0,0,0,0.1)' }}
+      whileHover={{ y: -3 }}
       onClick={onClick}
-      className={`relative overflow-hidden bg-card border border-border rounded-2xl px-8 py-9 text-left cursor-pointer shadow-sm transition-colors ${
-        isPrimary ? 'hover:border-primary/30' : 'hover:border-success/30'
-      }`}
+      className="group relative bg-card border border-border rounded-2xl px-7 py-8 text-left cursor-pointer transition-colors hover:border-foreground/20"
     >
-      <div className="text-3xl mb-4">{icon}</div>
-      <div className={`font-mono text-[10px] tracking-[2px] uppercase mb-2 ${isPrimary ? 'text-primary' : 'text-success'}`}>
+      <div className="w-10 h-10 rounded-lg bg-foreground/5 border border-border flex items-center justify-center text-foreground mb-5">
+        {icon}
+      </div>
+      <div className="font-mono text-[10px] tracking-[2px] uppercase text-muted-foreground mb-2">
         {label}
       </div>
       <div className="text-xl font-bold mb-2">{title}</div>
-      <div className="font-mono text-[11px] text-muted-foreground leading-relaxed">{desc}</div>
-      <div className={`inline-flex items-center gap-1.5 mt-5 font-mono text-[11px] font-bold ${isPrimary ? 'text-primary' : 'text-success'}`}>
-        {cta}
+      <div className="font-mono text-[11px] text-muted-foreground leading-relaxed mb-5">{desc}</div>
+      <div className="inline-flex items-center gap-1.5 font-mono text-[11px] font-semibold text-foreground group-hover:gap-2.5 transition-all">
+        Enter <ArrowRight className="w-3 h-3" />
       </div>
     </motion.div>
   );
