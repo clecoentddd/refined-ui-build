@@ -7,17 +7,17 @@ interface PillProps {
 }
 
 const variants = {
-  default: 'bg-surface2 border-border-strong text-muted-foreground',
-  primary: 'bg-primary/10 border-primary/30 text-primary',
-  success: 'bg-success/10 border-success/30 text-success',
-  warning: 'bg-warning/10 border-warning/30 text-warning',
-  destructive: 'bg-destructive/10 border-destructive/30 text-destructive',
+  default: 'bg-surface2 border-border text-muted-foreground',
+  primary: 'bg-foreground/5 border-foreground/15 text-foreground',
+  success: 'bg-success/10 border-success/20 text-success',
+  warning: 'bg-warning/10 border-warning/20 text-warning',
+  destructive: 'bg-destructive/10 border-destructive/20 text-destructive',
 };
 
 export default function Pill({ children, variant = 'default', className }: PillProps) {
   return (
     <span className={cn(
-      'inline-block font-mono text-[9px] tracking-widest uppercase px-2 py-0.5 rounded border font-medium',
+      'inline-block font-mono text-[9px] tracking-widest uppercase px-2 py-0.5 rounded-md border font-medium',
       variants[variant],
       className
     )}>

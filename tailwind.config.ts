@@ -60,6 +60,7 @@ export default {
         },
         surface2: "hsl(var(--surface2))",
         surface3: "hsl(var(--surface3))",
+        glow: "hsl(var(--glow))",
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",

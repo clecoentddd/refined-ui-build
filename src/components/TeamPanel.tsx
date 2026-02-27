@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronRight, List, Target, Plus, Radio, Loader2 } from 'lucide-react';
 import type { Team, RadarElement } from '@/context/AppContext';
 import { useAppState } from '@/context/AppContext';
 import { useAdminApi } from '@/services/api';
@@ -51,7 +52,7 @@ export default function TeamPanel({ team, onRefresh }: TeamPanelProps) {
     try {
       await useAdminApi.createRadar(newRadarId, team.teamId, company.orgId!, company.sid!);
       setRadarId(team.teamId, newRadarId);
-      toast.success('Radar created — ACTIVE');
+      toast.success('Radar created');
       setTimeout(loadRadar, 1500);
     } catch (e: any) { toast.error(`Error: ${e.message}`); }
   };
@@ -67,10 +68,10 @@ export default function TeamPanel({ team, onRefresh }: TeamPanelProps) {
   };
 
   return (
-    <div className={`bg-card border rounded-xl overflow-hidden shadow-sm transition-all ${open ? 'border-primary/30' : 'border-border hover:border-primary/20'}`}>
-      <div onClick={toggle} className="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-surface2 transition-colors select-none">
-        <div className="flex items-center gap-3.5">
-          <span className={`text-muted-foreground text-[11px] transition-transform ${open ? 'rotate-90' : ''}`}>▶</span>
+    <div className={`bg-card border rounded-xl overflow-hidden transition-all ${open ? 'border-foreground/15' : 'border-border hover:border-foreground/10'}`}>
+      <div onClick={toggle} className="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-surface2/50 transition-colors select-none">
+        <div className="flex items-center gap-3">
+          <ChevronRight className={`w-4 h-4 text-muted-foreground transition-transform ${open ? 'rotate-90' : ''}`} />
           <div>
             <div className="font-bold text-[15px]">{team.name || 'Unnamed'}</div>
             <div className="font-mono text-[10px] text-muted-foreground mt-0.5">
@@ -78,8 +79,8 @@ export default function TeamPanel({ team, onRefresh }: TeamPanelProps) {
             </div>
           </div>
         </div>
-        <Pill variant={elementCount !== null && elementCount > 0 ? 'success' : radarId ? 'default' : 'destructive'}>
-          {elementCount !== null ? `${elementCount} element${elementCount !== 1 ? 's' : ''}` : radarId ? '— check radar' : '— no radar'}
+        <Pill variant={elementCount !== null && elementCount > 0 ? 'primary' : radarId ? 'default' : 'destructive'}>
+          {elementCount !== null ? `${elementCount} element${elementCount !== 1 ? 's' : ''}` : radarId ? 'check radar' : 'no radar'}
         </Pill>
       </div>
 
@@ -94,39 +95,45 @@ export default function TeamPanel({ team, onRefresh }: TeamPanelProps) {
           >
             <div className="px-5 pb-5 border-t border-border">
               <div className="flex items-center justify-between py-4">
-                <span className="font-mono text-[10px] text-muted-foreground tracking-widest uppercase">📡 Radar</span>
+                <span className="font-mono text-[10px] text-muted-foreground tracking-widest uppercase flex items-center gap-1.5">
+                  <Radio className="w-3 h-3" /> Radar
+                </span>
                 <div className="flex gap-2 items-center">
-                  <div className="flex gap-1.5">
+                  <div className="flex gap-1">
                     <button
                       onClick={() => setView('list')}
-                      className={`px-3 py-1 rounded-md border font-mono text-[11px] transition-all ${view === 'list' ? 'bg-primary/10 border-primary/30 text-primary font-bold' : 'border-border bg-card text-muted-foreground'}`}
-                    >☰ List</button>
+                      className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border font-mono text-[11px] transition-all ${
+                        view === 'list' ? 'bg-foreground/5 border-foreground/15 text-foreground font-bold' : 'border-border bg-card text-muted-foreground'
+                      }`}
+                    ><List className="w-3 h-3" /> List</button>
                     <button
                       onClick={() => setView('radar')}
-                      className={`px-3 py-1 rounded-md border font-mono text-[11px] transition-all ${view === 'radar' ? 'bg-primary/10 border-primary/30 text-primary font-bold' : 'border-border bg-card text-muted-foreground'}`}
-                    >◎ Radar</button>
+                      className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border font-mono text-[11px] transition-all ${
+                        view === 'radar' ? 'bg-foreground/5 border-foreground/15 text-foreground font-bold' : 'border-border bg-card text-muted-foreground'
+                      }`}
+                    ><Target className="w-3 h-3" /> Radar</button>
                   </div>
                   {radarId && (
-                    <button onClick={() => setDetectOpen(true)} className="border border-border-strong bg-card text-muted-foreground hover:text-foreground px-3 py-1 rounded-md font-bold text-[11px] transition-all">
-                      + Detect
+                    <button onClick={() => setDetectOpen(true)} className="inline-flex items-center gap-1 border border-border bg-card text-muted-foreground hover:text-foreground hover:border-foreground/20 px-3 py-1.5 rounded-lg font-medium text-[11px] transition-all">
+                      <Plus className="w-3 h-3" /> Detect
                     </button>
                   )}
                 </div>
               </div>
 
               {!radarId ? (
-                <div className="text-center py-6">
-                  <div className="text-3xl mb-2.5">📡</div>
-                  <div className="font-mono text-xs text-muted-foreground mb-3.5">No radar exists for this team yet.</div>
-                  <button onClick={handleCreateRadar} className="bg-primary text-primary-foreground rounded-lg px-5 py-2 font-bold text-sm hover:opacity-90 transition-all shadow-md">
-                    📡 Create Radar
+                <div className="text-center py-8">
+                  <Radio className="w-8 h-8 mx-auto mb-3 text-muted-foreground opacity-30" />
+                  <div className="font-mono text-xs text-muted-foreground mb-4">No radar exists for this team yet.</div>
+                  <button onClick={handleCreateRadar} className="bg-foreground text-background rounded-lg px-5 py-2 font-bold text-sm hover:opacity-90 transition-all">
+                    Create Radar
                   </button>
                 </div>
               ) : loading ? (
-                <EmptyState icon="⏳" message="Loading..." />
+                <EmptyState icon={<Loader2 className="w-6 h-6 animate-spin opacity-30" />} message="Loading..." />
               ) : view === 'list' ? (
                 elements.length === 0 ? (
-                  <EmptyState icon="📡" message="No elements yet. Detect the first one." />
+                  <EmptyState icon={<Radio className="w-6 h-6 opacity-30" />} message="No elements yet. Detect the first one." />
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {elements.map(el => (

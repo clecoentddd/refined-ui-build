@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import { Building2 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import PageHeader from '@/components/PageHeader';
 import StatCard from '@/components/StatCard';
@@ -39,38 +40,36 @@ export default function PlatformDashboardPage() {
     <div className="min-h-screen flex flex-col">
       <Navbar variant="platform" />
       <div className="flex-1 grid grid-cols-[220px_1fr] min-h-0">
-        {/* Sidebar */}
-        <aside className="border-r border-border bg-card sticky top-[61px] h-[calc(100vh-61px)] overflow-y-auto p-5">
-          <div className="font-mono text-[9px] text-muted-foreground/60 tracking-[2px] uppercase px-2 mb-2">Platform</div>
-          <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-sidebar-accent text-sidebar-accent-foreground border border-primary/20 text-sm font-semibold cursor-pointer">
-            <span>🏢</span> Organizations
+        <aside className="border-r border-border bg-card sticky top-[53px] h-[calc(100vh-53px)] overflow-y-auto p-5">
+          <div className="font-mono text-[9px] text-muted-foreground/50 tracking-[2px] uppercase px-2 mb-2">Platform</div>
+          <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-foreground/5 border border-foreground/10 text-sm font-semibold cursor-pointer">
+            <Building2 className="w-4 h-4" /> Organizations
           </div>
         </aside>
 
-        {/* Main */}
         <main className="p-7 overflow-y-auto">
           <PageHeader
             title="Organizations"
-            subtitle="// all companies on the platform"
+            subtitle="All companies on the platform"
             actions={
-              <button onClick={() => setModalOpen(true)} className="bg-primary text-primary-foreground rounded-lg px-5 py-2.5 font-bold text-sm hover:opacity-90 transition-all shadow-md">
+              <button onClick={() => setModalOpen(true)} className="bg-foreground text-background rounded-lg px-5 py-2.5 font-bold text-sm hover:opacity-90 transition-all">
                 + New Organization
               </button>
             }
           />
 
-          <div className="grid grid-cols-3 gap-3.5 mb-6">
+          <div className="grid grid-cols-3 gap-3.5 mb-7">
             <StatCard value={orgs.length} label="Organizations" />
-            <StatCard value="●" label="Platform Status" />
+            <StatCard value="—" label="Platform Status" />
             <StatCard value={new Date().toLocaleTimeString()} label="Last Refresh" />
           </div>
 
           {orgs.length === 0 ? (
-            <EmptyState icon="🏢" message="No organizations yet. Create the first one." />
+            <EmptyState icon={<Building2 className="w-8 h-8 opacity-30" />} message="No organizations yet. Create the first one." />
           ) : (
             <div className="grid grid-cols-2 gap-3.5">
               {orgs.map((o) => (
-                <div key={o.organizationId} className="bg-card border border-border rounded-xl p-5 shadow-sm">
+                <div key={o.organizationId} className="bg-card border border-border rounded-xl p-5 hover:border-foreground/15 transition-all">
                   <div className="flex justify-between items-start">
                     <div>
                       <div className="font-bold text-[15px]">{o.organizationName || 'Unnamed'}</div>
@@ -86,12 +85,12 @@ export default function PlatformDashboardPage() {
         </main>
       </div>
 
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="New Organization" subtitle="// provision a new company on the platform">
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="New Organization" subtitle="Provision a new company on the platform">
         <FormField label="Organization Name"><FormInput value={newOrgName} onChange={e => setNewOrgName(e.target.value)} placeholder="Acme Corp" /></FormField>
         <FormField label="Admin Account ID" optional><FormInput value={newOrgAdmin} onChange={e => setNewOrgAdmin(e.target.value)} placeholder="auto-generated" /></FormField>
         <div className="flex gap-2.5 mt-5">
-          <button onClick={() => setModalOpen(false)} className="flex-1 border border-border-strong bg-card text-muted-foreground rounded-lg py-2.5 font-bold text-sm hover:text-foreground transition-all">Cancel</button>
-          <button onClick={createOrg} className="flex-1 bg-primary text-primary-foreground rounded-lg py-2.5 font-bold text-sm hover:opacity-90 transition-all shadow-md">Create Organization</button>
+          <button onClick={() => setModalOpen(false)} className="flex-1 border border-border bg-card text-muted-foreground rounded-lg py-2.5 font-bold text-sm hover:text-foreground transition-all">Cancel</button>
+          <button onClick={createOrg} className="flex-1 bg-foreground text-background rounded-lg py-2.5 font-bold text-sm hover:opacity-90 transition-all">Create Organization</button>
         </div>
       </Modal>
     </div>

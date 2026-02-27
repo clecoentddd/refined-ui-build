@@ -11,7 +11,7 @@ export function FormField({ label, children, className, optional }: FormFieldPro
   return (
     <div className={cn('mb-4', className)}>
       <label className="block font-mono text-[10px] text-muted-foreground tracking-[1.5px] uppercase mb-1.5">
-        {label}{optional && <span className="text-muted-foreground/60 ml-1">(optional)</span>}
+        {label}{optional && <span className="text-muted-foreground/50 ml-1">(optional)</span>}
       </label>
       {children}
     </div>
@@ -23,8 +23,8 @@ export function FormInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
     <input
       {...props}
       className={cn(
-        'w-full bg-card border border-border-strong rounded-lg px-3.5 py-2.5 text-foreground font-mono text-xs outline-none transition-all',
-        'focus:border-primary focus:ring-2 focus:ring-primary/10',
+        'w-full bg-background border border-border rounded-lg px-3.5 py-2.5 text-foreground font-mono text-xs outline-none transition-all',
+        'focus:border-foreground/30 focus:ring-1 focus:ring-foreground/10',
         props.className
       )}
     />
@@ -36,8 +36,8 @@ export function FormSelect({ children, ...props }: React.SelectHTMLAttributes<HT
     <select
       {...props}
       className={cn(
-        'w-full bg-card border border-border-strong rounded-lg px-3.5 py-2.5 text-foreground font-mono text-xs outline-none transition-all',
-        'focus:border-primary focus:ring-2 focus:ring-primary/10',
+        'w-full bg-background border border-border rounded-lg px-3.5 py-2.5 text-foreground font-mono text-xs outline-none transition-all',
+        'focus:border-foreground/30 focus:ring-1 focus:ring-foreground/10',
         props.className
       )}
     >

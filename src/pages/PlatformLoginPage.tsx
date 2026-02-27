@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
+import { ArrowLeft } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import { FormField, FormInput } from '@/components/FormElements';
 import { useAppState } from '@/context/AppContext';
@@ -37,18 +38,18 @@ export default function PlatformLoginPage() {
           className="w-full max-w-[440px] bg-card border border-border rounded-2xl p-10 shadow-xl relative overflow-hidden"
         >
           <button onClick={() => navigate('/')} className="inline-flex items-center gap-1.5 font-mono text-[11px] text-muted-foreground hover:text-foreground transition-colors mb-6 cursor-pointer">
-            ← Back to home
+            <ArrowLeft className="w-3 h-3" /> Back to home
           </button>
-          <div className="font-mono text-[10px] tracking-[2px] uppercase text-primary mb-2.5">Platform Administration</div>
+          <div className="font-mono text-[10px] tracking-[2px] uppercase text-muted-foreground mb-2.5">Platform Administration</div>
           <h2 className="text-[28px] font-extrabold leading-tight mb-1.5">Sign in as<br />Platform Admin</h2>
-          <p className="font-mono text-[11px] text-muted-foreground mb-8">// provision and manage organizations</p>
+          <p className="font-mono text-[11px] text-muted-foreground mb-8">Provision and manage organizations</p>
           <FormField label="Email">
             <FormInput type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="admin@stradar.io" />
           </FormField>
           <button
             onClick={signIn}
             disabled={loading}
-            className="w-full bg-primary text-primary-foreground rounded-lg py-2.5 px-5 font-bold text-sm hover:opacity-90 transition-all shadow-md disabled:opacity-50"
+            className="w-full bg-foreground text-background rounded-lg py-2.5 px-5 font-bold text-sm hover:opacity-90 transition-all disabled:opacity-50"
           >
             {loading ? 'Signing in...' : 'Sign In'}
           </button>

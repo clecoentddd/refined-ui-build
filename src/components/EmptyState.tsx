@@ -1,12 +1,16 @@
+import { Inbox } from 'lucide-react';
+
 interface EmptyStateProps {
-  icon: string;
+  icon?: React.ReactNode;
   message: string;
 }
 
 export default function EmptyState({ icon, message }: EmptyStateProps) {
   return (
-    <div className="text-center py-10 text-muted-foreground">
-      <div className="text-3xl mb-2.5">{icon}</div>
+    <div className="text-center py-12 text-muted-foreground">
+      <div className="mb-3 flex justify-center">
+        {icon || <Inbox className="w-8 h-8 opacity-30" />}
+      </div>
       <div className="font-mono text-xs">{message}</div>
     </div>
   );

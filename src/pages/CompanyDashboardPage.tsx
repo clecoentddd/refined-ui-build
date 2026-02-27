@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import { Users, Plus } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import PageHeader from '@/components/PageHeader';
 import EmptyState from '@/components/EmptyState';
@@ -58,13 +59,13 @@ export default function CompanyDashboardPage() {
     <div className="min-h-screen flex flex-col">
       <Navbar variant="company" />
       <div className="flex-1 grid grid-cols-[220px_1fr] min-h-0">
-        <aside className="border-r border-border bg-card sticky top-[61px] h-[calc(100vh-61px)] overflow-y-auto p-5">
-          <div className="font-mono text-[9px] text-muted-foreground/60 tracking-[2px] uppercase px-2 mb-2">Company</div>
-          <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-sidebar-accent text-sidebar-accent-foreground border border-primary/20 text-sm font-semibold cursor-pointer">
-            <span>👥</span> Teams & Radar
+        <aside className="border-r border-border bg-card sticky top-[53px] h-[calc(100vh-53px)] overflow-y-auto p-5">
+          <div className="font-mono text-[9px] text-muted-foreground/50 tracking-[2px] uppercase px-2 mb-2">Company</div>
+          <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-foreground/5 border border-foreground/10 text-sm font-semibold cursor-pointer">
+            <Users className="w-4 h-4" /> Teams & Radar
           </div>
           <div className="mt-6">
-            <div className="font-mono text-[9px] text-muted-foreground/60 tracking-[2px] uppercase px-2 mb-2">Session</div>
+            <div className="font-mono text-[9px] text-muted-foreground/50 tracking-[2px] uppercase px-2 mb-2">Session</div>
             <div className="px-2 font-mono text-[10px] text-muted-foreground leading-relaxed">
               Role: <span className="text-foreground">{company.role || '—'}</span><br />
               Org: <span className="text-foreground">{company.orgName || '—'}</span>
@@ -75,18 +76,18 @@ export default function CompanyDashboardPage() {
         <main className="p-7 overflow-y-auto">
           <PageHeader
             title="Teams & Radar"
-            subtitle="// click a team to view and manage its radar elements"
+            subtitle="Click a team to view and manage its radar elements"
             actions={
-              <button onClick={() => setTeamModalOpen(true)} className="border border-border-strong bg-card text-muted-foreground hover:text-foreground hover:border-primary rounded-lg px-5 py-2.5 font-bold text-sm transition-all">
-                + New Team
+              <button onClick={() => setTeamModalOpen(true)} className="inline-flex items-center gap-1.5 border border-border bg-card text-muted-foreground hover:text-foreground hover:border-foreground/20 rounded-lg px-5 py-2.5 font-bold text-sm transition-all">
+                <Plus className="w-4 h-4" /> New Team
               </button>
             }
           />
 
           {teams.length === 0 ? (
-            <EmptyState icon="👥" message="No teams yet. Create the first one." />
+            <EmptyState icon={<Users className="w-8 h-8 opacity-30" />} message="No teams yet. Create the first one." />
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {teams.map(team => (
                 <TeamPanel key={team.teamId} team={team} onRefresh={() => { loadTeams(); loadRadarList(); }} />
               ))}
@@ -95,7 +96,7 @@ export default function CompanyDashboardPage() {
         </main>
       </div>
 
-      <Modal open={teamModalOpen} onClose={() => setTeamModalOpen(false)} title="New Team" subtitle="// add a team to your organization">
+      <Modal open={teamModalOpen} onClose={() => setTeamModalOpen(false)} title="New Team" subtitle="Add a team to your organization">
         <FormField label="Team Name"><FormInput value={newTeam.name} onChange={e => setNewTeam(p => ({ ...p, name: e.target.value }))} placeholder="Strategy Team" /></FormField>
         <FormField label="Purpose"><FormInput value={newTeam.purpose} onChange={e => setNewTeam(p => ({ ...p, purpose: e.target.value }))} placeholder="Drive strategic initiatives" /></FormField>
         <div className="grid grid-cols-2 gap-3">
@@ -103,8 +104,8 @@ export default function CompanyDashboardPage() {
           <FormField label="Level"><FormInput type="number" value={newTeam.level} onChange={e => setNewTeam(p => ({ ...p, level: e.target.value }))} min={1} max={10} /></FormField>
         </div>
         <div className="flex gap-2.5 mt-5">
-          <button onClick={() => setTeamModalOpen(false)} className="flex-1 border border-border-strong bg-card text-muted-foreground rounded-lg py-2.5 font-bold text-sm hover:text-foreground transition-all">Cancel</button>
-          <button onClick={createTeam} className="flex-1 bg-success text-success-foreground rounded-lg py-2.5 font-bold text-sm hover:opacity-90 transition-all shadow-md">Create Team</button>
+          <button onClick={() => setTeamModalOpen(false)} className="flex-1 border border-border bg-card text-muted-foreground rounded-lg py-2.5 font-bold text-sm hover:text-foreground transition-all">Cancel</button>
+          <button onClick={createTeam} className="flex-1 bg-foreground text-background rounded-lg py-2.5 font-bold text-sm hover:opacity-90 transition-all">Create Team</button>
         </div>
       </Modal>
     </div>
