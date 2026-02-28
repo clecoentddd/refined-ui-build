@@ -10,44 +10,33 @@ import { FormField, FormInput } from '@/components/FormElements';
 import { useAppState } from '@/context/AppContext';
 import { useAdminApi } from '@/services/api';
 
-export default function CompanyDashboardPage() {
-  const { company, teams, setTeams, setRadarIds } = useAppState();
+export default function OrganizationDashboardPage() {
+  const { organization, teams, setTeams } = useAppState();
   const [teamModalOpen, setTeamModalOpen] = useState(false);
   const [newTeam, setNewTeam] = useState({ name: '', purpose: '', context: '', level: '1' });
 
-  useEffect(() => { loadTeams(); loadRadarList(); }, []);
+  useEffect(() => { loadTeams(); }, []);
 
   const loadTeams = async () => {
     try {
       const r = await useAdminApi.getTeamList();
-      setTeams((r.data || []).filter((t: any) => t.organizationId === company.orgId));
+      setTeams((r.data || []).filter((t: any) => t.organizationId === organization.orgId));
     } catch { setTeams([]); }
-  };
-
-  const loadRadarList = async () => {
-    try {
-      const r = await useAdminApi.getRadarList();
-      const ids: Record<string, string> = {};
-      (r.data || []).forEach((radar: any) => {
-        if (radar.teamId && radar.radarId) ids[radar.teamId] = radar.radarId;
-      });
-      setRadarIds(ids);
-    } catch {}
   };
 
   const createTeam = async () => {
     if (!newTeam.name.trim()) return toast.error('Name required');
     const payload = {
-      organizationId: company.orgId,
-      adminAccountId: company.adminId,
-      organizationName: company.orgName,
+      organizationId: organization.orgId,
+      adminAccountId: organization.adminId,
+      organizationName: organization.orgName,
       name: newTeam.name,
       purpose: newTeam.purpose,
       context: newTeam.context,
       level: parseInt(newTeam.level) || 1,
     };
     try {
-      await useAdminApi.createTeam(payload, company.sid!);
+      await useAdminApi.createTeam(payload, organization.sid!);
       setTeamModalOpen(false);
       setNewTeam({ name: '', purpose: '', context: '', level: '1' });
       toast.success(`Team "${newTeam.name}" created`);
@@ -57,18 +46,18 @@ export default function CompanyDashboardPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar variant="company" />
+      <Navbar variant="organization" />
       <div className="flex-1 grid grid-cols-[220px_1fr] min-h-0">
         <aside className="border-r border-border bg-card sticky top-[53px] h-[calc(100vh-53px)] overflow-y-auto p-5">
-          <div className="font-mono text-[9px] text-muted-foreground/50 tracking-[2px] uppercase px-2 mb-2">Company</div>
+          <div className="font-mono text-[9px] text-muted-foreground/50 tracking-[2px] uppercase px-2 mb-2">Organization</div>
           <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-foreground/5 border border-foreground/10 text-sm font-semibold cursor-pointer">
             <Users className="w-4 h-4" /> Teams & Radar
           </div>
           <div className="mt-6">
             <div className="font-mono text-[9px] text-muted-foreground/50 tracking-[2px] uppercase px-2 mb-2">Session</div>
             <div className="px-2 font-mono text-[10px] text-muted-foreground leading-relaxed">
-              Role: <span className="text-foreground">{company.role || '—'}</span><br />
-              Org: <span className="text-foreground">{company.orgName || '—'}</span>
+              Role: <span className="text-foreground">{organization.role || '—'}</span><br />
+              Org: <span className="text-foreground">{organization.orgName || '—'}</span>
             </div>
           </div>
         </aside>
@@ -89,7 +78,7 @@ export default function CompanyDashboardPage() {
           ) : (
             <div className="space-y-3">
               {teams.map(team => (
-                <TeamPanel key={team.teamId} team={team} onRefresh={() => { loadTeams(); loadRadarList(); }} />
+                <TeamPanel key={team.teamId} team={team} onRefresh={() => { loadTeams(); }} />
               ))}
             </div>
           )}

@@ -41,10 +41,10 @@ export default function HomePage() {
           />
           <HomeCard
             icon={<Building2 className="w-5 h-5" />}
-            label="Company Admin"
-            title="Company View"
+            label="Organization Admin"
+            title="Organization View"
             desc="Manage your teams and radar elements."
-            onClick={() => navigate('/login/company')}
+            onClick={() => navigate('/login/organization')}
           />
         </motion.div>
       </div>

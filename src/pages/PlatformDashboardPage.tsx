@@ -15,7 +15,7 @@ export default function PlatformDashboardPage() {
   const { saas, orgs, setOrgs } = useAppState();
   const [modalOpen, setModalOpen] = useState(false);
   const [newOrgName, setNewOrgName] = useState('');
-  const [newOrgAdmin, setNewOrgAdmin] = useState('');
+  const [newOrgUsername, setNewOrgUsername] = useState('');
 
   useEffect(() => { loadOrgs(); }, []);
 
@@ -25,12 +25,21 @@ export default function PlatformDashboardPage() {
   };
 
   const createOrg = async () => {
-    if (!newOrgName.trim()) return toast.error('Name required');
-    const adminId = newOrgAdmin.trim() || crypto.randomUUID();
+    if (!newOrgName.trim() || !newOrgUsername.trim()) return toast.error('Name and Username required');
+
+    const organizationId = crypto.randomUUID();
+    const personId = crypto.randomUUID();
+
     try {
-      await useAdminApi.defineOrganization(newOrgName, adminId, saas.sid!);
+      await useAdminApi.defineOrganization({
+        organizationId,
+        personId,
+        username: newOrgUsername.trim(),
+        organizationName: newOrgName.trim()
+      }, saas.sid!, saas.adminId!);
+
       setModalOpen(false);
-      setNewOrgName(''); setNewOrgAdmin('');
+      setNewOrgName(''); setNewOrgUsername('');
       toast.success(`Organization "${newOrgName}" created`);
       setTimeout(loadOrgs, 1200);
     } catch (e: any) { toast.error(`Error: ${e.message}`); }
@@ -50,7 +59,7 @@ export default function PlatformDashboardPage() {
         <main className="p-7 overflow-y-auto">
           <PageHeader
             title="Organizations"
-            subtitle="All companies on the platform"
+            subtitle="All organizations on the platform"
             actions={
               <button onClick={() => setModalOpen(true)} className="bg-foreground text-background rounded-lg px-5 py-2.5 font-bold text-sm hover:opacity-90 transition-all">
                 + New Organization
@@ -87,7 +96,7 @@ export default function PlatformDashboardPage() {
 
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="New Organization" subtitle="Provision a new company on the platform">
         <FormField label="Organization Name"><FormInput value={newOrgName} onChange={e => setNewOrgName(e.target.value)} placeholder="Acme Corp" /></FormField>
-        <FormField label="Admin Account ID" optional><FormInput value={newOrgAdmin} onChange={e => setNewOrgAdmin(e.target.value)} placeholder="auto-generated" /></FormField>
+        <FormField label="Admin Username"><FormInput value={newOrgUsername} onChange={e => setNewOrgUsername(e.target.value)} placeholder="admin@acme.com" /></FormField>
         <div className="flex gap-2.5 mt-5">
           <button onClick={() => setModalOpen(false)} className="flex-1 border border-border bg-card text-muted-foreground rounded-lg py-2.5 font-bold text-sm hover:text-foreground transition-all">Cancel</button>
           <button onClick={createOrg} className="flex-1 bg-foreground text-background rounded-lg py-2.5 font-bold text-sm hover:opacity-90 transition-all">Create Organization</button>

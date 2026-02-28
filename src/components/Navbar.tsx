@@ -4,16 +4,16 @@ import { toast } from 'sonner';
 import { LogOut, Radar } from 'lucide-react';
 
 interface NavbarProps {
-  variant?: 'home' | 'platform' | 'company';
+  variant?: 'home' | 'platform' | 'organization';
 }
 
 export default function Navbar({ variant = 'home' }: NavbarProps) {
   const navigate = useNavigate();
-  const { saas, company, resetSaas, resetCompany } = useAppState();
+  const { saas, organization, resetSaas, resetOrganization } = useAppState();
 
   const signOut = () => {
     if (variant === 'platform') { resetSaas(); }
-    else { resetCompany(); }
+    else { resetOrganization(); }
     navigate('/');
     toast.success('Signed out');
   };
@@ -44,12 +44,12 @@ export default function Navbar({ variant = 'home' }: NavbarProps) {
             </button>
           </>
         )}
-        {variant === 'company' && (
+        {variant === 'organization' && (
           <>
             <span className="bg-foreground/5 border border-foreground/10 text-foreground px-3 py-1 rounded-full text-[10px] tracking-widest font-medium">
-              {company.orgName || 'COMPANY'}
+              {organization.orgName || 'ORGANIZATION'}
             </span>
-            {company.email && <span className="text-foreground text-[11px]">{company.email}</span>}
+            {organization.email && <span className="text-foreground text-[11px]">{organization.email}</span>}
             <button onClick={signOut} className="inline-flex items-center gap-1.5 border border-border bg-card text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all">
               <LogOut className="w-3 h-3" /> Sign Out
             </button>

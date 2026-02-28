@@ -63,11 +63,8 @@ export default function RadarSVG({ elements, onEdit }: Props) {
           <button
             key={key}
             onClick={() => setActiveQ(activeQ === q.index ? null : q.index)}
-            className={`w-full text-left px-3 py-2 rounded-lg border font-mono text-[11px] transition-all ${
-              activeQ === q.index
-                ? 'border-foreground/20 text-foreground bg-foreground/5 font-bold'
-                : 'border-border bg-card text-muted-foreground hover:border-foreground/10 hover:text-foreground'
-            }`}
+            className={`w-full text-left px-3 py-1.5 rounded-lg border font-mono text-[11px] transition-all ${activeQ === q.index ? 'border-primary/30 text-primary bg-primary/10 font-bold' : 'border-border bg-card text-muted-foreground hover:border-primary/20 hover:text-primary'
+              }`}
           >
             {q.label}
           </button>
@@ -196,7 +193,7 @@ export default function RadarSVG({ elements, onEdit }: Props) {
 
             {/* Element dots */}
             {visible.map((dot, i) => (
-              <g key={i} className="cursor-pointer" onMouseEnter={() => setHoveredEl(dot)} onMouseLeave={() => setHoveredEl(null)} filter={hoveredEl?.radarElementId === dot.radarElementId ? 'url(#glow)' : undefined}>
+              <g key={i} className="cursor-pointer" onMouseEnter={() => setHoveredEl(dot)} onMouseLeave={() => setHoveredEl(null)} filter={hoveredEl?.environmentalChangeId === dot.environmentalChangeId ? 'url(#glow)' : undefined}>
                 {dot.type === 'OPPORTUNITY' ? (
                   <>
                     <circle cx={dot.x} cy={dot.y} r={dot.size} fill="none" stroke="hsl(var(--foreground))" strokeWidth={1.5} opacity={dot.opacity} />
@@ -206,7 +203,7 @@ export default function RadarSVG({ elements, onEdit }: Props) {
                   <circle cx={dot.x} cy={dot.y} r={dot.size} fill="hsl(var(--foreground))" opacity={dot.opacity} />
                 )}
                 {/* Hover ring */}
-                {hoveredEl?.radarElementId === dot.radarElementId && (
+                {hoveredEl?.environmentalChangeId === dot.environmentalChangeId && (
                   <circle cx={dot.x} cy={dot.y} r={dot.size + 5} fill="none" stroke="hsl(var(--foreground))" strokeWidth={1} opacity={0.3} />
                 )}
               </g>

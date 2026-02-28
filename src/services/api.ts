@@ -1,4 +1,5 @@
 const BASE = 'http://localhost:8080';
+export const GENESIS_ADMIN_ID = '00000000-0000-0000-0000-000000000001';
 
 function hdrs(sid?: string) {
   return {
@@ -24,34 +25,60 @@ async function api(url: string, opts: RequestInit & { method?: string } = {}) {
 }
 
 export const useAdminApi = {
-  async signInAdmin(email: string) {
-    const sid = crypto.randomUUID();
-    const d = await api('/signinadmin', { method: 'POST', headers: hdrs(sid), body: JSON.stringify({ email }) });
-    return { ...d, sessionId: sid };
+  async signInAdmin(username: string, sid: string) {
+    const payload = { username };
+    return api('/signinsuperadmin', {
+      method: 'POST',
+      headers: hdrs(sid),
+      body: JSON.stringify(payload)
+    });
   },
-  defineOrganization(name: string, adminAccountId: string, sid: string) {
-    return api('/defineorganization', { method: 'POST', headers: hdrs(sid), body: JSON.stringify({ organizationName: name, adminAccountId }) });
+  async getSuperAdminAccount(sid: string) {
+    return api('/superadminaccount', {
+      headers: hdrs(sid)
+    });
   },
+  defineOrganization(payload: { organizationId: string, personId: string, username: string, organizationName: string }, sid: string, userId: string) {
+    return api('/defineorganization', {
+      method: 'POST',
+      headers: { ...hdrs(sid), 'X-User-Id': userId },
+      body: JSON.stringify(payload)
+    });
+  },
+
   getOrganizationList() { return api('/organizationlist'); },
-  signInToOrganization(email: string, organizationId: string, organizationName: string, role: string, adminAccountId: string, sid: string) {
-    return api('/signintoorganizationadminaccount', { method: 'POST', headers: hdrs(sid), body: JSON.stringify({ email, organizationId, organizationName, role, adminAccountId }) });
+  signInToOrganization(personId: string, sid: string) {
+    return api('/signintoorganizationpersonaccount', { method: 'POST', headers: hdrs(sid), body: JSON.stringify({ personId }) });
   },
+  getPersonAccount(personId: string) {
+    return api(`/account/${personId}`);
+  },
+
   createTeam(payload: any, sid: string) {
     return api('/createteam', { method: 'POST', headers: hdrs(sid), body: JSON.stringify(payload) });
   },
   getTeamList() { return api('/teamlist'); },
-  detectRadarElement(payload: any, sid: string) {
-    return api('/detectradarelement', { method: 'POST', headers: hdrs(sid), body: JSON.stringify(payload) });
+
+  // Environmental Changes API
+  getEnvironmentalChangesForTeam(teamId: string) {
+    return api(`/environmentalchanges/team/${teamId}`);
   },
-  updateRadarElement(id: string, payload: any, sid: string) {
-    return api(`/updateradarelement/${id}`, { method: 'POST', headers: hdrs(sid), body: JSON.stringify(payload) });
+  getEnvironmentalChangeDetails(environmentalChangeId: string) {
+    return api(`/environmentalchanges/${environmentalChangeId}`);
   },
-  deleteRadarElement(id: string, payload: any, sid: string) {
-    return api(`/deleteradarelement/${id}`, { method: 'POST', headers: hdrs(sid), body: JSON.stringify(payload) });
+  detectEnvironmentalChange(payload: any, sid: string) {
+    return api('/detectenvironmentalchange', { method: 'POST', headers: hdrs(sid), body: JSON.stringify(payload) });
   },
+  updateEnvironmentalChange(id: string, payload: any, sid: string) {
+    return api(`/updateenvironmentalchange/${id}`, { method: 'POST', headers: hdrs(sid), body: JSON.stringify(payload) });
+  },
+  deleteEnvironmentalChange(id: string, payload: any, sid: string) {
+    return api(`/deleteenvironmentalchange/${id}`, { method: 'POST', headers: hdrs(sid), body: JSON.stringify(payload) });
+  },
+
+  // Legacy/Compatibility (Can be removed later if not used)
   getRadarList() { return api('/radarlist'); },
-  getRadarView(radarId: string) { return api(`/radarview/${radarId}`); },
-  createRadar(radarId: string, teamId: string, orgId: string, sid: string) {
-    return api('/createradar', { method: 'POST', headers: hdrs(sid), body: JSON.stringify({ radarId, teamId, organizationId: orgId }) });
+  createRadar(environmentalChangeId: string, teamId: string, orgId: string, sid: string) {
+    return api('/createradar', { method: 'POST', headers: hdrs(sid), body: JSON.stringify({ environmentalChangeId, teamId, organizationId: orgId }) });
   },
 };

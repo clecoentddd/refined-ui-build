@@ -14,7 +14,7 @@ interface Props {
 }
 
 export default function DetectElementModal({ open, onClose, teamId, teamName, onSuccess }: Props) {
-  const { company, radarIds } = useAppState();
+  const { organization } = useAppState();
   const [form, setForm] = useState({
     title: '', type: 'THREAT', category: 'BUSINESS', distance: 'DETECTED',
     impact: 'LOW', risk: 'LOW', assess: '', detect: '', respond: '',
@@ -25,14 +25,15 @@ export default function DetectElementModal({ open, onClose, teamId, teamName, on
 
   const submit = async () => {
     if (!form.title.trim()) return toast.error('Title required');
-    const radarId = radarIds[teamId];
-    if (!radarId) return toast.error('Radar not initialized for this team');
+
     const payload = {
-      radarId, radarElementId: crypto.randomUUID(), teamId,
-      organizationId: company.orgId, ...form,
+      environmentalChangeId: crypto.randomUUID(),
+      teamId,
+      organizationId: organization.orgId,
+      ...form,
     };
     try {
-      await useAdminApi.detectRadarElement(payload, company.sid!);
+      await useAdminApi.detectEnvironmentalChange(payload, organization.sid!);
       onClose();
       toast.success(`"${form.title}" detected`);
       setForm({ title: '', type: 'THREAT', category: 'BUSINESS', distance: 'DETECTED', impact: 'LOW', risk: 'LOW', assess: '', detect: '', respond: '' });

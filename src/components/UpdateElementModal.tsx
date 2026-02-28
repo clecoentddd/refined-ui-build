@@ -15,7 +15,7 @@ interface Props {
 }
 
 export default function UpdateElementModal({ open, onClose, element, teamId, onSuccess }: Props) {
-  const { company, radarIds } = useAppState();
+  const { organization } = useAppState();
   const [form, setForm] = useState({
     title: '', type: 'THREAT', category: 'BUSINESS', distance: 'DETECTED',
     impact: 'LOW', risk: 'LOW', assess: '', detect: '', respond: '',
@@ -33,12 +33,14 @@ export default function UpdateElementModal({ open, onClose, element, teamId, onS
     setForm(p => ({ ...p, [k]: e.target.value }));
 
   const submit = async () => {
-    const radarId = radarIds[teamId];
     const payload = {
-      radarId, radarElementId: element.radarElementId, teamId, organizationId: company.orgId, ...form,
+      environmentalChangeId: element.environmentalChangeId,
+      teamId,
+      organizationId: organization.orgId,
+      ...form,
     };
     try {
-      await useAdminApi.updateRadarElement(element.radarElementId, payload, company.sid!);
+      await useAdminApi.updateEnvironmentalChange(element.environmentalChangeId, payload, organization.sid!);
       onClose();
       toast.success('Element updated');
       setTimeout(onSuccess, 1000);

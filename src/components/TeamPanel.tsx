@@ -18,7 +18,7 @@ interface TeamPanelProps {
 }
 
 export default function TeamPanel({ team, onRefresh }: TeamPanelProps) {
-  const { company, radarIds, setRadarId } = useAppState();
+  const { organization } = useAppState();
   const [open, setOpen] = useState(false);
   const [elements, setElements] = useState<RadarElement[]>([]);
   const [loading, setLoading] = useState(false);
@@ -26,7 +26,6 @@ export default function TeamPanel({ team, onRefresh }: TeamPanelProps) {
   const [detectOpen, setDetectOpen] = useState(false);
   const [updateEl, setUpdateEl] = useState<RadarElement | null>(null);
   const [elementCount, setElementCount] = useState<number | null>(null);
-  const radarId = radarIds[team.teamId];
 
   const toggle = async () => {
     const next = !open;
@@ -35,33 +34,24 @@ export default function TeamPanel({ team, onRefresh }: TeamPanelProps) {
   };
 
   const loadRadar = async () => {
-    if (!radarId) { setElements([]); return; }
     setLoading(true);
     try {
-      const r = await useAdminApi.getRadarView(radarId);
-      if (!r || !r.radarId) { setElements([]); setElementCount(0); setLoading(false); return; }
-      const els = r.elements || [];
+      const r = await useAdminApi.getEnvironmentalChangesForTeam(team.teamId);
+      const els = r || [];
       setElements(els);
       setElementCount(els.length);
     } catch { setElements([]); setElementCount(0); }
     setLoading(false);
   };
 
-  const handleCreateRadar = async () => {
-    const newRadarId = crypto.randomUUID();
-    try {
-      await useAdminApi.createRadar(newRadarId, team.teamId, company.orgId!, company.sid!);
-      setRadarId(team.teamId, newRadarId);
-      toast.success('Radar created');
-      setTimeout(loadRadar, 1500);
-    } catch (e: any) { toast.error(`Error: ${e.message}`); }
-  };
-
   const handleDelete = async (eid: string) => {
     if (!confirm('Delete this radar element?')) return;
-    if (!radarId) return toast.error('Radar ID not found');
     try {
-      await useAdminApi.deleteRadarElement(eid, { radarId, radarElementId: eid, teamId: team.teamId, organizationId: company.orgId }, company.sid!);
+      await useAdminApi.deleteEnvironmentalChange(eid, {
+        environmentalChangeId: eid,
+        teamId: team.teamId,
+        organizationId: organization.orgId
+      }, organization.sid!);
       toast.success('Element deleted');
       setTimeout(loadRadar, 1000);
     } catch (e: any) { toast.error(`Error: ${e.message}`); }
@@ -79,8 +69,8 @@ export default function TeamPanel({ team, onRefresh }: TeamPanelProps) {
             </div>
           </div>
         </div>
-        <Pill variant={elementCount !== null && elementCount > 0 ? 'primary' : radarId ? 'default' : 'destructive'}>
-          {elementCount !== null ? `${elementCount} element${elementCount !== 1 ? 's' : ''}` : radarId ? 'check radar' : 'no radar'}
+        <Pill variant={elementCount !== null && elementCount > 0 ? 'primary' : 'default'}>
+          {elementCount !== null ? `${elementCount} element${elementCount !== 1 ? 's' : ''}` : 'loading...'}
         </Pill>
       </div>
 
@@ -102,34 +92,22 @@ export default function TeamPanel({ team, onRefresh }: TeamPanelProps) {
                   <div className="flex gap-1">
                     <button
                       onClick={() => setView('list')}
-                      className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border font-mono text-[11px] transition-all ${
-                        view === 'list' ? 'bg-foreground/5 border-foreground/15 text-foreground font-bold' : 'border-border bg-card text-muted-foreground'
-                      }`}
+                      className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border font-mono text-[11px] transition-all ${view === 'list' ? 'bg-foreground/5 border-foreground/15 text-foreground font-bold' : 'border-border bg-card text-muted-foreground'
+                        }`}
                     ><List className="w-3 h-3" /> List</button>
                     <button
                       onClick={() => setView('radar')}
-                      className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border font-mono text-[11px] transition-all ${
-                        view === 'radar' ? 'bg-foreground/5 border-foreground/15 text-foreground font-bold' : 'border-border bg-card text-muted-foreground'
-                      }`}
+                      className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border font-mono text-[11px] transition-all ${view === 'radar' ? 'bg-foreground/5 border-foreground/15 text-foreground font-bold' : 'border-border bg-card text-muted-foreground'
+                        }`}
                     ><Target className="w-3 h-3" /> Radar</button>
                   </div>
-                  {radarId && (
-                    <button onClick={() => setDetectOpen(true)} className="inline-flex items-center gap-1 border border-border bg-card text-muted-foreground hover:text-foreground hover:border-foreground/20 px-3 py-1.5 rounded-lg font-medium text-[11px] transition-all">
-                      <Plus className="w-3 h-3" /> Detect
-                    </button>
-                  )}
+                  <button onClick={() => setDetectOpen(true)} className="inline-flex items-center gap-1 border border-border bg-card text-muted-foreground hover:text-foreground hover:border-foreground/20 px-3 py-1.5 rounded-lg font-medium text-[11px] transition-all">
+                    <Plus className="w-3 h-3" /> Detect
+                  </button>
                 </div>
               </div>
 
-              {!radarId ? (
-                <div className="text-center py-8">
-                  <Radio className="w-8 h-8 mx-auto mb-3 text-muted-foreground opacity-30" />
-                  <div className="font-mono text-xs text-muted-foreground mb-4">No radar exists for this team yet.</div>
-                  <button onClick={handleCreateRadar} className="bg-foreground text-background rounded-lg px-5 py-2 font-bold text-sm hover:opacity-90 transition-all">
-                    Create Radar
-                  </button>
-                </div>
-              ) : loading ? (
+              {loading ? (
                 <EmptyState icon={<Loader2 className="w-6 h-6 animate-spin opacity-30" />} message="Loading..." />
               ) : view === 'list' ? (
                 elements.length === 0 ? (
@@ -137,7 +115,7 @@ export default function TeamPanel({ team, onRefresh }: TeamPanelProps) {
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {elements.map(el => (
-                      <RadarElementCard key={el.radarElementId} element={el} onEdit={() => setUpdateEl(el)} onDelete={() => handleDelete(el.radarElementId)} />
+                      <RadarElementCard key={el.environmentalChangeId} element={el} onEdit={() => setUpdateEl(el)} onDelete={() => handleDelete(el.environmentalChangeId)} />
                     ))}
                   </div>
                 )

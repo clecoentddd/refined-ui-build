@@ -6,13 +6,15 @@ export interface SaasSession {
   email: string | null;
 }
 
-export interface CompanySession {
+export interface OrganizationSession {
   sid: string | null;
   email: string | null;
   orgId: string | null;
   orgName: string | null;
   role: string | null;
   adminId: string | null;
+  username: string | null;
+  teamId: string | null;
 }
 
 export interface Organization {
@@ -20,6 +22,7 @@ export interface Organization {
   organizationName: string;
   adminAccountId: string;
 }
+
 
 export interface Team {
   teamId: string;
@@ -31,9 +34,9 @@ export interface Team {
 }
 
 export interface RadarElement {
-  radarElementId: string;
-  radarId?: string;
+  environmentalChangeId: string;
   teamId?: string;
+  organizationId?: string;
   title: string;
   type: 'THREAT' | 'OPPORTUNITY';
   category: string;
@@ -47,45 +50,34 @@ export interface RadarElement {
 
 interface AppState {
   saas: SaasSession;
-  company: CompanySession;
+  organization: OrganizationSession;
   orgs: Organization[];
   teams: Team[];
-  radarIds: Record<string, string>;
   setSaas: (s: SaasSession) => void;
-  setCompany: (c: CompanySession) => void;
+  setOrganization: (c: OrganizationSession) => void;
   setOrgs: (o: Organization[]) => void;
   setTeams: (t: Team[]) => void;
-  setRadarId: (teamId: string, radarId: string) => void;
-  setRadarIds: (ids: Record<string, string>) => void;
   resetSaas: () => void;
-  resetCompany: () => void;
+  resetOrganization: () => void;
 }
 
 const defaultSaas: SaasSession = { sid: null, adminId: null, email: null };
-const defaultCompany: CompanySession = { sid: null, email: null, orgId: null, orgName: null, role: null, adminId: null };
+const defaultOrganization: OrganizationSession = { sid: null, email: null, orgId: null, orgName: null, role: null, adminId: null, username: null, teamId: null };
 
 const AppContext = createContext<AppState | null>(null);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [saas, setSaas] = useState<SaasSession>(defaultSaas);
-  const [company, setCompany] = useState<CompanySession>(defaultCompany);
+  const [organization, setOrganization] = useState<OrganizationSession>(defaultOrganization);
   const [orgs, setOrgs] = useState<Organization[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
-  const [radarIds, setRadarIdsState] = useState<Record<string, string>>({});
 
-  const setRadarId = useCallback((teamId: string, radarId: string) => {
-    setRadarIdsState(prev => ({ ...prev, [teamId]: radarId }));
-  }, []);
-
-  const setRadarIds = useCallback((ids: Record<string, string>) => {
-    setRadarIdsState(prev => ({ ...prev, ...ids }));
-  }, []);
 
   const resetSaas = useCallback(() => { setSaas(defaultSaas); setOrgs([]); }, []);
-  const resetCompany = useCallback(() => { setCompany(defaultCompany); setTeams([]); }, []);
+  const resetOrganization = useCallback(() => { setOrganization(defaultOrganization); setTeams([]); }, []);
 
   return (
-    <AppContext.Provider value={{ saas, company, orgs, teams, radarIds, setSaas, setCompany, setOrgs, setTeams, setRadarId, setRadarIds, resetSaas, resetCompany }}>
+    <AppContext.Provider value={{ saas, organization, orgs, teams, setSaas, setOrganization, setOrgs, setTeams, resetSaas, resetOrganization }}>
       {children}
     </AppContext.Provider>
   );
