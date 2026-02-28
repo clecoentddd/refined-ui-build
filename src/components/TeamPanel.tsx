@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, List, Target, Plus, Radio, Loader2 } from 'lucide-react';
+import { ChevronRight, List, Target, Plus, Radio, Loader2, Pencil, Trash2 } from 'lucide-react';
 import type { Team, RadarElement } from '@/context/AppContext';
 import { useAppState } from '@/context/AppContext';
 import { useAdminApi } from '@/services/api';
@@ -11,6 +11,8 @@ import RadarElementCard from '@/components/RadarElementCard';
 import RadarSVG from '@/components/RadarSVG';
 import DetectElementModal from '@/components/DetectElementModal';
 import UpdateElementModal from '@/components/UpdateElementModal';
+import Modal from '@/components/Modal';
+import { FormField, FormInput } from '@/components/FormElements';
 
 interface TeamPanelProps {
   team: Team;
@@ -26,6 +28,12 @@ export default function TeamPanel({ team, onRefresh }: TeamPanelProps) {
   const [detectOpen, setDetectOpen] = useState(false);
   const [updateEl, setUpdateEl] = useState<RadarElement | null>(null);
   const [elementCount, setElementCount] = useState<number | null>(null);
+
+  // Team edit/delete state
+  const [editOpen, setEditOpen] = useState(false);
+  const [editTeam, setEditTeam] = useState({ name: team.name, purpose: team.purpose || '', context: team.context || '', level: String(team.level ?? 1) });
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const toggle = async () => {
     const next = !open;
@@ -44,7 +52,7 @@ export default function TeamPanel({ team, onRefresh }: TeamPanelProps) {
     setLoading(false);
   };
 
-  const handleDelete = async (eid: string) => {
+  const handleDeleteElement = async (eid: string) => {
     if (!confirm('Delete this radar element?')) return;
     try {
       await useAdminApi.deleteEnvironmentalChange(eid, {
@@ -55,6 +63,46 @@ export default function TeamPanel({ team, onRefresh }: TeamPanelProps) {
       toast.success('Element deleted');
       setTimeout(loadRadar, 1000);
     } catch (e: any) { toast.error(`Error: ${e.message}`); }
+  };
+
+  const openEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditTeam({ name: team.name, purpose: team.purpose || '', context: team.context || '', level: String(team.level ?? 1) });
+    setEditOpen(true);
+  };
+
+  const handleUpdateTeam = async () => {
+    if (!editTeam.name.trim()) return toast.error('Name required');
+    setSaving(true);
+    try {
+      await useAdminApi.updateTeam(team.teamId, {
+        teamId: team.teamId,
+        organizationId: team.organizationId,
+        name: editTeam.name,
+        purpose: editTeam.purpose,
+        context: editTeam.context,
+        level: parseInt(editTeam.level) || 1,
+      }, organization.sid!);
+      toast.success(`Team "${editTeam.name}" updated`);
+      setEditOpen(false);
+      setTimeout(onRefresh, 1500);
+    } catch (e: any) { toast.error(`Error: ${e.message}`); }
+    setSaving(false);
+  };
+
+  const handleDeleteTeam = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!confirm(`Delete team "${team.name}"? This cannot be undone.`)) return;
+    setDeleting(true);
+    try {
+      await useAdminApi.deleteTeam(team.teamId, {
+        teamId: team.teamId,
+        organizationId: team.organizationId,
+      }, organization.sid!);
+      toast.success(`Team "${team.name}" deleted`);
+      setTimeout(onRefresh, 1500);
+    } catch (e: any) { toast.error(`Error: ${e.message}`); }
+    setDeleting(false);
   };
 
   return (
@@ -69,9 +117,27 @@ export default function TeamPanel({ team, onRefresh }: TeamPanelProps) {
             </div>
           </div>
         </div>
-        <Pill variant={elementCount !== null && elementCount > 0 ? 'primary' : 'default'}>
-          {elementCount !== null ? `${elementCount} element${elementCount !== 1 ? 's' : ''}` : 'loading...'}
-        </Pill>
+        <div className="flex items-center gap-2">
+          <Pill variant={elementCount !== null && elementCount > 0 ? 'primary' : 'default'}>
+            {elementCount !== null ? `${elementCount} element${elementCount !== 1 ? 's' : ''}` : 'loading...'}
+          </Pill>
+          {/* Edit / Delete team action buttons */}
+          <button
+            onClick={openEdit}
+            title="Edit team"
+            className="p-1.5 rounded-lg border border-transparent text-muted-foreground hover:text-foreground hover:bg-foreground/5 hover:border-foreground/10 transition-all"
+          >
+            <Pencil className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={handleDeleteTeam}
+            disabled={deleting}
+            title="Delete team"
+            className="p-1.5 rounded-lg border border-transparent text-muted-foreground hover:text-red-500 hover:bg-red-500/10 hover:border-red-500/20 transition-all disabled:opacity-40"
+          >
+            {deleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+          </button>
+        </div>
       </div>
 
       <AnimatePresence>
@@ -115,7 +181,7 @@ export default function TeamPanel({ team, onRefresh }: TeamPanelProps) {
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {elements.map(el => (
-                      <RadarElementCard key={el.environmentalChangeId} element={el} onEdit={() => setUpdateEl(el)} onDelete={() => handleDelete(el.environmentalChangeId)} />
+                      <RadarElementCard key={el.environmentalChangeId} element={el} onEdit={() => setUpdateEl(el)} onDelete={() => handleDeleteElement(el.environmentalChangeId)} />
                     ))}
                   </div>
                 )
@@ -144,6 +210,22 @@ export default function TeamPanel({ team, onRefresh }: TeamPanelProps) {
           onSuccess={loadRadar}
         />
       )}
+
+      {/* Edit Team Modal */}
+      <Modal open={editOpen} onClose={() => setEditOpen(false)} title="Edit Team" subtitle="Update team details">
+        <FormField label="Team Name"><FormInput value={editTeam.name} onChange={e => setEditTeam(p => ({ ...p, name: e.target.value }))} placeholder="Strategy Team" /></FormField>
+        <FormField label="Purpose"><FormInput value={editTeam.purpose} onChange={e => setEditTeam(p => ({ ...p, purpose: e.target.value }))} placeholder="Drive strategic initiatives" /></FormField>
+        <div className="grid grid-cols-2 gap-3">
+          <FormField label="Context"><FormInput value={editTeam.context} onChange={e => setEditTeam(p => ({ ...p, context: e.target.value }))} placeholder="Executive" /></FormField>
+          <FormField label="Level"><FormInput type="number" value={editTeam.level} onChange={e => setEditTeam(p => ({ ...p, level: e.target.value }))} min={1} max={10} /></FormField>
+        </div>
+        <div className="flex gap-2.5 mt-5">
+          <button onClick={() => setEditOpen(false)} className="flex-1 border border-border bg-card text-muted-foreground rounded-lg py-2.5 font-bold text-sm hover:text-foreground transition-all">Cancel</button>
+          <button onClick={handleUpdateTeam} disabled={saving} className="flex-1 bg-foreground text-background rounded-lg py-2.5 font-bold text-sm hover:opacity-90 transition-all disabled:opacity-50">
+            {saving ? 'Saving…' : 'Save Changes'}
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }

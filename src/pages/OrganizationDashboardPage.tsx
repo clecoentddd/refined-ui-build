@@ -19,8 +19,8 @@ export default function OrganizationDashboardPage() {
 
   const loadTeams = async () => {
     try {
-      const r = await useAdminApi.getTeamList();
-      setTeams((r.data || []).filter((t: any) => t.organizationId === organization.orgId));
+      const r = await useAdminApi.getTeamListByOrg(organization.orgId!);
+      setTeams(r.teams || []);
     } catch { setTeams([]); }
   };
 

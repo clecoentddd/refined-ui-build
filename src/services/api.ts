@@ -58,6 +58,13 @@ export const useAdminApi = {
     return api('/createteam', { method: 'POST', headers: hdrs(sid), body: JSON.stringify(payload) });
   },
   getTeamList() { return api('/teamlist'); },
+  getTeamListByOrg(organizationId: string) { return api(`/teamlist/${organizationId}`); },
+  updateTeam(teamId: string, payload: { teamId: string; organizationId: string; name: string; purpose: string; context: string; level: number }, sid: string) {
+    return api(`/updateteam/${teamId}`, { method: 'POST', headers: hdrs(sid), body: JSON.stringify(payload) });
+  },
+  deleteTeam(teamId: string, payload: { teamId: string; organizationId: string }, sid: string) {
+    return api(`/deleteteam/${teamId}`, { method: 'POST', headers: hdrs(sid), body: JSON.stringify(payload) });
+  },
 
   // Environmental Changes API
   getEnvironmentalChangesForTeam(teamId: string) {
