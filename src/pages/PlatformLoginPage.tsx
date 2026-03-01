@@ -22,7 +22,7 @@ export default function PlatformLoginPage() {
 
       let resolved = false;
       let retries = 0;
-      const maxRetries = 30; // 6 seconds total
+      const maxRetries = 30;
 
       while (!resolved && retries < maxRetries) {
         try {
@@ -35,7 +35,6 @@ export default function PlatformLoginPage() {
             break;
           }
         } catch (e) {
-          // If error is 404, we continue polling
           console.log(`[STRADAR] Polling read model... (${retries})`);
         }
         await new Promise(res => setTimeout(res, 200));
@@ -62,41 +61,41 @@ export default function PlatformLoginPage() {
       <Navbar variant="home" />
       <div className="relative z-10 flex-1 flex items-center justify-center px-10 py-16">
         <motion.div
-          initial={{ opacity: 0, scale: 0.96 }}
+          initial={{ opacity: 0, scale: 0.97 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-[440px] bg-card border border-border rounded-2xl p-10 shadow-xl relative overflow-hidden"
+          className="w-full max-w-[440px] bg-card border border-border rounded-xl p-8 shadow-lg"
         >
-          <button onClick={() => navigate('/')} className="inline-flex items-center gap-1.5 font-mono text-[11px] text-muted-foreground hover:text-foreground transition-colors mb-6 cursor-pointer">
-            <ArrowLeft className="w-3 h-3" /> Back to home
+          <button onClick={() => navigate('/')} className="inline-flex items-center gap-1.5 text-[12px] text-muted-foreground hover:text-foreground transition-colors mb-6 cursor-pointer">
+            <ArrowLeft className="w-3.5 h-3.5" /> Back to home
           </button>
 
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
               <Shield className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <div className="font-mono text-[10px] tracking-[2px] uppercase text-muted-foreground">Platform Administration</div>
-              <h2 className="text-[20px] font-bold leading-tight">Identity Verification</h2>
+              <div className="text-[11px] font-semibold tracking-wide uppercase text-muted-foreground">Platform Administration</div>
+              <h2 className="text-lg font-bold leading-tight">Identity Verification</h2>
             </div>
           </div>
 
-          <div className="space-y-4 mb-8">
-            <div className="bg-muted/30 rounded-lg p-4 border border-border/50">
+          <div className="space-y-4 mb-6">
+            <div className="bg-muted rounded-lg p-4">
               <p className="text-sm font-medium mb-1">Claim-Based Identity</p>
-              <p className="font-mono text-[11px] text-muted-foreground leading-relaxed">
+              <p className="text-[12px] text-muted-foreground leading-relaxed">
                 Establishing session as Genesis Administrator.<br />
-                ID: <span className="text-foreground/70">{GENESIS_ADMIN_ID.split('-')[0]}...</span>
+                ID: <span className="text-foreground/70 font-mono text-[11px]">{GENESIS_ADMIN_ID.split('-')[0]}...</span>
               </p>
             </div>
 
-            <div className="space-y-2">
-              <label className="font-mono text-[10px] uppercase text-muted-foreground tracking-wider ml-1">Admin Username</label>
+            <div className="space-y-1.5">
+              <label className="text-[12px] font-medium text-muted-foreground">Admin Username</label>
               <input
                 type="text"
                 value={username}
                 onChange={e => setUsername(e.target.value)}
                 placeholder="superadmin"
-                className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                className="w-full bg-background border border-border rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all"
               />
             </div>
           </div>
@@ -104,11 +103,11 @@ export default function PlatformLoginPage() {
           <button
             onClick={signIn}
             disabled={loading || !username.trim()}
-            className="w-full bg-foreground text-background rounded-lg py-3 px-5 font-bold text-sm hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+            className="w-full bg-primary text-primary-foreground rounded-lg py-2.5 px-5 font-semibold text-sm hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {loading ? (
               <>
-                <div className="w-4 h-4 border-2 border-background/30 border-t-background rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
                 <span>Resolving Identity...</span>
               </>
             ) : (
@@ -116,7 +115,7 @@ export default function PlatformLoginPage() {
             )}
           </button>
 
-          <p className="mt-6 text-center font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
+          <p className="mt-5 text-center text-[10px] text-muted-foreground/60 uppercase tracking-wider font-medium">
             Secure Infrastructure Access
           </p>
         </motion.div>

@@ -45,19 +45,19 @@ export default function OrganizationDashboardPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-background">
       <Navbar variant="organization" />
-      <div className="flex-1 grid grid-cols-[220px_1fr] min-h-0">
-        <aside className="border-r border-border bg-card sticky top-[53px] h-[calc(100vh-53px)] overflow-y-auto p-5">
-          <div className="font-mono text-[9px] text-muted-foreground/50 tracking-[2px] uppercase px-2 mb-2">Organization</div>
-          <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-foreground/5 border border-foreground/10 text-sm font-semibold cursor-pointer">
+      <div className="flex-1 grid grid-cols-[240px_1fr] min-h-0">
+        <aside className="border-r border-border bg-card sticky top-[49px] h-[calc(100vh-49px)] overflow-y-auto p-5">
+          <div className="text-[10px] font-semibold text-muted-foreground tracking-wide uppercase px-2 mb-2">Organization</div>
+          <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-primary/5 border border-primary/10 text-sm font-semibold text-primary cursor-pointer">
             <Users className="w-4 h-4" /> Teams & Radar
           </div>
           <div className="mt-6">
-            <div className="font-mono text-[9px] text-muted-foreground/50 tracking-[2px] uppercase px-2 mb-2">Session</div>
-            <div className="px-2 font-mono text-[10px] text-muted-foreground leading-relaxed">
-              Role: <span className="text-foreground">{organization.role || '—'}</span><br />
-              Org: <span className="text-foreground">{organization.orgName || '—'}</span>
+            <div className="text-[10px] font-semibold text-muted-foreground tracking-wide uppercase px-2 mb-2">Session</div>
+            <div className="px-2 text-[12px] text-muted-foreground leading-relaxed">
+              Role: <span className="text-foreground font-medium">{organization.role || '—'}</span><br />
+              Org: <span className="text-foreground font-medium">{organization.orgName || '—'}</span>
             </div>
           </div>
         </aside>
@@ -67,7 +67,7 @@ export default function OrganizationDashboardPage() {
             title="Teams & Radar"
             subtitle="Click a team to view and manage its radar elements"
             actions={
-              <button onClick={() => setTeamModalOpen(true)} className="inline-flex items-center gap-1.5 border border-border bg-card text-muted-foreground hover:text-foreground hover:border-foreground/20 rounded-lg px-5 py-2.5 font-bold text-sm transition-all">
+              <button onClick={() => setTeamModalOpen(true)} className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground rounded-lg px-5 py-2 font-semibold text-sm hover:opacity-90 transition-all">
                 <Plus className="w-4 h-4" /> New Team
               </button>
             }
@@ -93,8 +93,8 @@ export default function OrganizationDashboardPage() {
           <FormField label="Level"><FormInput type="number" value={newTeam.level} onChange={e => setNewTeam(p => ({ ...p, level: e.target.value }))} min={1} max={10} /></FormField>
         </div>
         <div className="flex gap-2.5 mt-5">
-          <button onClick={() => setTeamModalOpen(false)} className="flex-1 border border-border bg-card text-muted-foreground rounded-lg py-2.5 font-bold text-sm hover:text-foreground transition-all">Cancel</button>
-          <button onClick={createTeam} className="flex-1 bg-foreground text-background rounded-lg py-2.5 font-bold text-sm hover:opacity-90 transition-all">Create Team</button>
+          <button onClick={() => setTeamModalOpen(false)} className="flex-1 border border-border bg-background text-muted-foreground rounded-lg py-2.5 font-semibold text-sm hover:text-foreground transition-all">Cancel</button>
+          <button onClick={createTeam} className="flex-1 bg-primary text-primary-foreground rounded-lg py-2.5 font-semibold text-sm hover:opacity-90 transition-all">Create Team</button>
         </div>
       </Modal>
     </div>

@@ -12,7 +12,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["'Plus Jakarta Sans'", "system-ui", "sans-serif"],
+        sans: ["'Inter'", "system-ui", "sans-serif"],
         mono: ["'IBM Plex Mono'", "monospace"],
       },
       colors: {
@@ -60,7 +60,6 @@ export default {
         },
         surface2: "hsl(var(--surface2))",
         surface3: "hsl(var(--surface3))",
-        glow: "hsl(var(--glow))",
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -70,6 +69,13 @@ export default {
           "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
+        },
+        radar: {
+          threat: "hsl(var(--radar-threat))",
+          opportunity: "hsl(var(--radar-opportunity))",
+          high: "hsl(var(--radar-high))",
+          medium: "hsl(var(--radar-medium))",
+          low: "hsl(var(--radar-low))",
         },
       },
       borderRadius: {

@@ -19,39 +19,39 @@ export default function Navbar({ variant = 'home' }: NavbarProps) {
   };
 
   return (
-    <nav className="flex items-center justify-between px-8 py-3.5 border-b border-border bg-card/80 backdrop-blur-xl sticky top-0 z-50">
-      <div className="flex items-center gap-2.5 cursor-pointer font-extrabold text-lg tracking-tight" onClick={() => navigate('/')}>
-        <div className="w-8 h-8 bg-foreground text-background rounded-lg flex items-center justify-center">
+    <nav className="flex items-center justify-between px-6 py-3 border-b border-border bg-card/90 backdrop-blur-xl sticky top-0 z-50">
+      <div className="flex items-center gap-2.5 cursor-pointer font-bold text-base tracking-tight" onClick={() => navigate('/')}>
+        <div className="w-8 h-8 bg-primary text-primary-foreground rounded-lg flex items-center justify-center">
           <Radar className="w-4 h-4" />
         </div>
         <span>STRADAR</span>
       </div>
 
-      <div className="flex items-center gap-3 font-mono text-xs text-muted-foreground">
+      <div className="flex items-center gap-3 text-sm">
         {variant === 'home' && (
-          <span className="bg-surface2 border border-border px-3 py-1 rounded-full text-[10px] tracking-widest">
-            Strategic Radar
+          <span className="text-muted-foreground text-[12px]">
+            Strategic Radar Platform
           </span>
         )}
         {variant === 'platform' && (
           <>
-            <span className="bg-foreground/5 border border-foreground/10 text-foreground px-3 py-1 rounded-full text-[10px] tracking-widest font-medium">
+            <span className="bg-primary/10 text-primary px-3 py-1 rounded-md text-[11px] font-semibold tracking-wide">
               PLATFORM
             </span>
-            {saas.email && <span className="text-foreground text-[11px]">{saas.email}</span>}
-            <button onClick={signOut} className="inline-flex items-center gap-1.5 border border-border bg-card text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all">
-              <LogOut className="w-3 h-3" /> Sign Out
+            {saas.email && <span className="text-muted-foreground text-[12px]">{saas.email}</span>}
+            <button onClick={signOut} className="inline-flex items-center gap-1.5 border border-border bg-background text-muted-foreground hover:text-foreground hover:bg-muted px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all">
+              <LogOut className="w-3.5 h-3.5" /> Sign Out
             </button>
           </>
         )}
         {variant === 'organization' && (
           <>
-            <span className="bg-foreground/5 border border-foreground/10 text-foreground px-3 py-1 rounded-full text-[10px] tracking-widest font-medium">
+            <span className="bg-primary/10 text-primary px-3 py-1 rounded-md text-[11px] font-semibold tracking-wide">
               {organization.orgName || 'ORGANIZATION'}
             </span>
-            {organization.email && <span className="text-foreground text-[11px]">{organization.email}</span>}
-            <button onClick={signOut} className="inline-flex items-center gap-1.5 border border-border bg-card text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all">
-              <LogOut className="w-3 h-3" /> Sign Out
+            {organization.email && <span className="text-muted-foreground text-[12px]">{organization.email}</span>}
+            <button onClick={signOut} className="inline-flex items-center gap-1.5 border border-border bg-background text-muted-foreground hover:text-foreground hover:bg-muted px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all">
+              <LogOut className="w-3.5 h-3.5" /> Sign Out
             </button>
           </>
         )}

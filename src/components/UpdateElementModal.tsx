@@ -48,7 +48,7 @@ export default function UpdateElementModal({ open, onClose, element, teamId, onS
   };
 
   return (
-    <Modal open={open} onClose={onClose} title="Update Element" subtitle="// edit radar element details">
+    <Modal open={open} onClose={onClose} title="Update Element" subtitle="Edit radar element details">
       <FormField label="Title"><FormInput value={form.title} onChange={update('title')} /></FormField>
       <div className="grid grid-cols-2 gap-3">
         <FormField label="Type"><FormSelect value={form.type} onChange={update('type')}><option value="THREAT">Threat</option><option value="OPPORTUNITY">Opportunity</option></FormSelect></FormField>
@@ -63,8 +63,8 @@ export default function UpdateElementModal({ open, onClose, element, teamId, onS
       <FormField label="Detect"><FormInput value={form.detect} onChange={update('detect')} /></FormField>
       <FormField label="Respond"><FormInput value={form.respond} onChange={update('respond')} /></FormField>
       <div className="flex gap-2.5 mt-5">
-        <button onClick={onClose} className="flex-1 border border-border-strong bg-card text-muted-foreground rounded-lg py-2.5 font-bold text-sm hover:text-foreground transition-all">Cancel</button>
-        <button onClick={submit} className="flex-1 bg-primary text-primary-foreground rounded-lg py-2.5 font-bold text-sm hover:opacity-90 transition-all shadow-md">Save Changes</button>
+        <button onClick={onClose} className="flex-1 border border-border bg-background text-muted-foreground rounded-lg py-2.5 font-semibold text-sm hover:text-foreground transition-all">Cancel</button>
+        <button onClick={submit} className="flex-1 bg-primary text-primary-foreground rounded-lg py-2.5 font-semibold text-sm hover:opacity-90 transition-all">Save Changes</button>
       </div>
     </Modal>
   );

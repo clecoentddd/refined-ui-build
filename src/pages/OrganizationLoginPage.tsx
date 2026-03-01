@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Building2 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import { FormField, FormInput } from '@/components/FormElements';
 import { useAppState } from '@/context/AppContext';
@@ -45,16 +45,22 @@ export default function OrganizationLoginPage() {
       <Navbar variant="home" />
       <div className="relative z-10 flex-1 flex items-center justify-center px-10 py-16">
         <motion.div
-          initial={{ opacity: 0, scale: 0.96 }}
+          initial={{ opacity: 0, scale: 0.97 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-[440px] bg-card border border-border rounded-2xl p-10 shadow-xl relative overflow-hidden"
+          className="w-full max-w-[440px] bg-card border border-border rounded-xl p-8 shadow-lg"
         >
-          <button onClick={() => navigate('/')} className="inline-flex items-center gap-1.5 font-mono text-[11px] text-muted-foreground hover:text-foreground transition-colors mb-6 cursor-pointer">
-            <ArrowLeft className="w-3 h-3" /> Back to home
+          <button onClick={() => navigate('/')} className="inline-flex items-center gap-1.5 text-[12px] text-muted-foreground hover:text-foreground transition-colors mb-6 cursor-pointer">
+            <ArrowLeft className="w-3.5 h-3.5" /> Back to home
           </button>
-          <div className="font-mono text-[10px] tracking-[2px] uppercase text-muted-foreground mb-2.5">Organization Access</div>
-          <h2 className="text-[28px] font-extrabold leading-tight mb-1.5">Sign in to<br />your Organization</h2>
-          <p className="font-mono text-[11px] text-muted-foreground mb-8">Manage teams and radar elements</p>
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Building2 className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <div className="text-[11px] font-semibold tracking-wide uppercase text-muted-foreground">Organization Access</div>
+              <h2 className="text-lg font-bold leading-tight">Sign in to your Organization</h2>
+            </div>
+          </div>
 
           <FormField label="Person ID">
             <FormInput
@@ -67,7 +73,7 @@ export default function OrganizationLoginPage() {
           <button
             onClick={signIn}
             disabled={loading}
-            className="w-full bg-foreground text-background rounded-lg py-2.5 px-5 font-bold text-sm hover:opacity-90 transition-all disabled:opacity-50 mt-6"
+            className="w-full bg-primary text-primary-foreground rounded-lg py-2.5 px-5 font-semibold text-sm hover:opacity-90 transition-all disabled:opacity-50 mt-4"
           >
             {loading ? 'Signing in...' : 'Sign In to Organization'}
           </button>
