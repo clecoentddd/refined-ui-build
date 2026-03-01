@@ -46,12 +46,12 @@ export default function PlatformDashboardPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-background">
       <Navbar variant="platform" />
-      <div className="flex-1 grid grid-cols-[220px_1fr] min-h-0">
-        <aside className="border-r border-border bg-card sticky top-[53px] h-[calc(100vh-53px)] overflow-y-auto p-5">
-          <div className="font-mono text-[9px] text-muted-foreground/50 tracking-[2px] uppercase px-2 mb-2">Platform</div>
-          <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-foreground/5 border border-foreground/10 text-sm font-semibold cursor-pointer">
+      <div className="flex-1 grid grid-cols-[240px_1fr] min-h-0">
+        <aside className="border-r border-border bg-card sticky top-[49px] h-[calc(100vh-49px)] overflow-y-auto p-5">
+          <div className="text-[10px] font-semibold text-muted-foreground tracking-wide uppercase px-2 mb-2">Platform</div>
+          <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-primary/5 border border-primary/10 text-sm font-semibold text-primary cursor-pointer">
             <Building2 className="w-4 h-4" /> Organizations
           </div>
         </aside>
@@ -61,29 +61,29 @@ export default function PlatformDashboardPage() {
             title="Organizations"
             subtitle="All organizations on the platform"
             actions={
-              <button onClick={() => setModalOpen(true)} className="bg-foreground text-background rounded-lg px-5 py-2.5 font-bold text-sm hover:opacity-90 transition-all">
+              <button onClick={() => setModalOpen(true)} className="bg-primary text-primary-foreground rounded-lg px-5 py-2 font-semibold text-sm hover:opacity-90 transition-all">
                 + New Organization
               </button>
             }
           />
 
-          <div className="grid grid-cols-3 gap-3.5 mb-7">
-            <StatCard value={orgs.length} label="Organizations" />
-            <StatCard value="—" label="Platform Status" />
+          <div className="grid grid-cols-3 gap-3 mb-7">
+            <StatCard value={orgs.length} label="Total Organizations" />
+            <StatCard value="Active" label="Platform Status" />
             <StatCard value={new Date().toLocaleTimeString()} label="Last Refresh" />
           </div>
 
           {orgs.length === 0 ? (
             <EmptyState icon={<Building2 className="w-8 h-8 opacity-30" />} message="No organizations yet. Create the first one." />
           ) : (
-            <div className="grid grid-cols-2 gap-3.5">
+            <div className="grid grid-cols-2 gap-3">
               {orgs.map((o) => (
-                <div key={o.organizationId} className="bg-card border border-border rounded-xl p-5 hover:border-foreground/15 transition-all">
+                <div key={o.organizationId} className="bg-card border border-border rounded-xl p-5 hover:border-primary/20 hover:shadow-sm transition-all">
                   <div className="flex justify-between items-start">
                     <div>
-                      <div className="font-bold text-[15px]">{o.organizationName || 'Unnamed'}</div>
-                      <div className="font-mono text-[10px] text-muted-foreground mt-1">ID: {o.organizationId || '—'}</div>
-                      <div className="font-mono text-[10px] text-muted-foreground">Admin: {o.adminAccountId || '—'}</div>
+                      <div className="font-semibold text-[15px]">{o.organizationName || 'Unnamed'}</div>
+                      <div className="text-[11px] text-muted-foreground mt-1">ID: <span className="font-mono">{o.organizationId || '—'}</span></div>
+                      <div className="text-[11px] text-muted-foreground">Admin: <span className="font-mono">{o.adminAccountId || '—'}</span></div>
                     </div>
                     <Pill variant="success">ACTIVE</Pill>
                   </div>
@@ -98,8 +98,8 @@ export default function PlatformDashboardPage() {
         <FormField label="Organization Name"><FormInput value={newOrgName} onChange={e => setNewOrgName(e.target.value)} placeholder="Acme Corp" /></FormField>
         <FormField label="Admin Username"><FormInput value={newOrgUsername} onChange={e => setNewOrgUsername(e.target.value)} placeholder="admin@acme.com" /></FormField>
         <div className="flex gap-2.5 mt-5">
-          <button onClick={() => setModalOpen(false)} className="flex-1 border border-border bg-card text-muted-foreground rounded-lg py-2.5 font-bold text-sm hover:text-foreground transition-all">Cancel</button>
-          <button onClick={createOrg} className="flex-1 bg-foreground text-background rounded-lg py-2.5 font-bold text-sm hover:opacity-90 transition-all">Create Organization</button>
+          <button onClick={() => setModalOpen(false)} className="flex-1 border border-border bg-background text-muted-foreground rounded-lg py-2.5 font-semibold text-sm hover:text-foreground transition-all">Cancel</button>
+          <button onClick={createOrg} className="flex-1 bg-primary text-primary-foreground rounded-lg py-2.5 font-semibold text-sm hover:opacity-90 transition-all">Create Organization</button>
         </div>
       </Modal>
     </div>

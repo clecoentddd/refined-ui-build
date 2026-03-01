@@ -29,7 +29,6 @@ export default function TeamPanel({ team, onRefresh }: TeamPanelProps) {
   const [updateEl, setUpdateEl] = useState<RadarElement | null>(null);
   const [elementCount, setElementCount] = useState<number | null>(null);
 
-  // Team edit/delete state
   const [editOpen, setEditOpen] = useState(false);
   const [editTeam, setEditTeam] = useState({ name: team.name, purpose: team.purpose || '', context: team.context || '', level: String(team.level ?? 1) });
   const [saving, setSaving] = useState(false);
@@ -106,13 +105,13 @@ export default function TeamPanel({ team, onRefresh }: TeamPanelProps) {
   };
 
   return (
-    <div className={`bg-card border rounded-xl overflow-hidden transition-all ${open ? 'border-foreground/15' : 'border-border hover:border-foreground/10'}`}>
-      <div onClick={toggle} className="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-surface2/50 transition-colors select-none">
+    <div className={`bg-card border rounded-xl overflow-hidden transition-all ${open ? 'border-primary/20 shadow-sm' : 'border-border hover:border-primary/10'}`}>
+      <div onClick={toggle} className="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-muted/30 transition-colors select-none">
         <div className="flex items-center gap-3">
           <ChevronRight className={`w-4 h-4 text-muted-foreground transition-transform ${open ? 'rotate-90' : ''}`} />
           <div>
-            <div className="font-bold text-[15px]">{team.name || 'Unnamed'}</div>
-            <div className="font-mono text-[10px] text-muted-foreground mt-0.5">
+            <div className="font-semibold text-[15px]">{team.name || 'Unnamed'}</div>
+            <div className="text-[12px] text-muted-foreground mt-0.5">
               Level {team.level || 1}{team.context ? ` · ${team.context}` : ''}{team.purpose ? ` · ${team.purpose}` : ''}
             </div>
           </div>
@@ -121,11 +120,10 @@ export default function TeamPanel({ team, onRefresh }: TeamPanelProps) {
           <Pill variant={elementCount !== null && elementCount > 0 ? 'primary' : 'default'}>
             {elementCount !== null ? `${elementCount} element${elementCount !== 1 ? 's' : ''}` : 'loading...'}
           </Pill>
-          {/* Edit / Delete team action buttons */}
           <button
             onClick={openEdit}
             title="Edit team"
-            className="p-1.5 rounded-lg border border-transparent text-muted-foreground hover:text-foreground hover:bg-foreground/5 hover:border-foreground/10 transition-all"
+            className="p-1.5 rounded-lg border border-transparent text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
           >
             <Pencil className="w-3.5 h-3.5" />
           </button>
@@ -133,7 +131,7 @@ export default function TeamPanel({ team, onRefresh }: TeamPanelProps) {
             onClick={handleDeleteTeam}
             disabled={deleting}
             title="Delete team"
-            className="p-1.5 rounded-lg border border-transparent text-muted-foreground hover:text-red-500 hover:bg-red-500/10 hover:border-red-500/20 transition-all disabled:opacity-40"
+            className="p-1.5 rounded-lg border border-transparent text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all disabled:opacity-40"
           >
             {deleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
           </button>
@@ -151,23 +149,21 @@ export default function TeamPanel({ team, onRefresh }: TeamPanelProps) {
           >
             <div className="px-5 pb-5 border-t border-border">
               <div className="flex items-center justify-between py-4">
-                <span className="font-mono text-[10px] text-muted-foreground tracking-widest uppercase flex items-center gap-1.5">
-                  <Radio className="w-3 h-3" /> Radar
+                <span className="text-[12px] text-muted-foreground font-medium flex items-center gap-1.5">
+                  <Radio className="w-3.5 h-3.5" /> Radar Elements
                 </span>
                 <div className="flex gap-2 items-center">
-                  <div className="flex gap-1">
+                  <div className="flex gap-1 bg-muted rounded-lg p-0.5">
                     <button
                       onClick={() => setView('list')}
-                      className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border font-mono text-[11px] transition-all ${view === 'list' ? 'bg-foreground/5 border-foreground/15 text-foreground font-bold' : 'border-border bg-card text-muted-foreground'
-                        }`}
+                      className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-[12px] font-medium transition-all ${view === 'list' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                     ><List className="w-3 h-3" /> List</button>
                     <button
                       onClick={() => setView('radar')}
-                      className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border font-mono text-[11px] transition-all ${view === 'radar' ? 'bg-foreground/5 border-foreground/15 text-foreground font-bold' : 'border-border bg-card text-muted-foreground'
-                        }`}
+                      className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-[12px] font-medium transition-all ${view === 'radar' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                     ><Target className="w-3 h-3" /> Radar</button>
                   </div>
-                  <button onClick={() => setDetectOpen(true)} className="inline-flex items-center gap-1 border border-border bg-card text-muted-foreground hover:text-foreground hover:border-foreground/20 px-3 py-1.5 rounded-lg font-medium text-[11px] transition-all">
+                  <button onClick={() => setDetectOpen(true)} className="inline-flex items-center gap-1 bg-primary text-primary-foreground px-3 py-1.5 rounded-lg font-medium text-[12px] hover:opacity-90 transition-all">
                     <Plus className="w-3 h-3" /> Detect
                   </button>
                 </div>
@@ -211,7 +207,6 @@ export default function TeamPanel({ team, onRefresh }: TeamPanelProps) {
         />
       )}
 
-      {/* Edit Team Modal */}
       <Modal open={editOpen} onClose={() => setEditOpen(false)} title="Edit Team" subtitle="Update team details">
         <FormField label="Team Name"><FormInput value={editTeam.name} onChange={e => setEditTeam(p => ({ ...p, name: e.target.value }))} placeholder="Strategy Team" /></FormField>
         <FormField label="Purpose"><FormInput value={editTeam.purpose} onChange={e => setEditTeam(p => ({ ...p, purpose: e.target.value }))} placeholder="Drive strategic initiatives" /></FormField>
@@ -220,8 +215,8 @@ export default function TeamPanel({ team, onRefresh }: TeamPanelProps) {
           <FormField label="Level"><FormInput type="number" value={editTeam.level} onChange={e => setEditTeam(p => ({ ...p, level: e.target.value }))} min={1} max={10} /></FormField>
         </div>
         <div className="flex gap-2.5 mt-5">
-          <button onClick={() => setEditOpen(false)} className="flex-1 border border-border bg-card text-muted-foreground rounded-lg py-2.5 font-bold text-sm hover:text-foreground transition-all">Cancel</button>
-          <button onClick={handleUpdateTeam} disabled={saving} className="flex-1 bg-foreground text-background rounded-lg py-2.5 font-bold text-sm hover:opacity-90 transition-all disabled:opacity-50">
+          <button onClick={() => setEditOpen(false)} className="flex-1 border border-border bg-background text-muted-foreground rounded-lg py-2.5 font-semibold text-sm hover:text-foreground transition-all">Cancel</button>
+          <button onClick={handleUpdateTeam} disabled={saving} className="flex-1 bg-primary text-primary-foreground rounded-lg py-2.5 font-semibold text-sm hover:opacity-90 transition-all disabled:opacity-50">
             {saving ? 'Saving…' : 'Save Changes'}
           </button>
         </div>

@@ -42,7 +42,7 @@ export default function DetectElementModal({ open, onClose, teamId, teamName, on
   };
 
   return (
-    <Modal open={open} onClose={onClose} title="Detect Element" subtitle={`// team: ${teamName}`}>
+    <Modal open={open} onClose={onClose} title="Detect Element" subtitle={`Team: ${teamName}`}>
       <FormField label="Title"><FormInput value={form.title} onChange={update('title')} placeholder="AI Regulation Risk" /></FormField>
       <div className="grid grid-cols-2 gap-3">
         <FormField label="Type"><FormSelect value={form.type} onChange={update('type')}><option value="THREAT">Threat</option><option value="OPPORTUNITY">Opportunity</option></FormSelect></FormField>
@@ -57,8 +57,8 @@ export default function DetectElementModal({ open, onClose, teamId, teamName, on
       <FormField label="Detect"><FormInput value={form.detect} onChange={update('detect')} placeholder="How was this detected?" /></FormField>
       <FormField label="Respond"><FormInput value={form.respond} onChange={update('respond')} placeholder="Response plan" /></FormField>
       <div className="flex gap-2.5 mt-5">
-        <button onClick={onClose} className="flex-1 border border-border-strong bg-card text-muted-foreground rounded-lg py-2.5 font-bold text-sm hover:text-foreground transition-all">Cancel</button>
-        <button onClick={submit} className="flex-1 bg-success text-success-foreground rounded-lg py-2.5 font-bold text-sm hover:opacity-90 transition-all shadow-md">Detect Element</button>
+        <button onClick={onClose} className="flex-1 border border-border bg-background text-muted-foreground rounded-lg py-2.5 font-semibold text-sm hover:text-foreground transition-all">Cancel</button>
+        <button onClick={submit} className="flex-1 bg-success text-success-foreground rounded-lg py-2.5 font-semibold text-sm hover:opacity-90 transition-all">Detect Element</button>
       </div>
     </Modal>
   );
