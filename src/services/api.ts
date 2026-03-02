@@ -97,7 +97,7 @@ export const useAdminApi = {
 
   // Initiative API
   createInitiative(initiativeId: string, payload: { initiativeId: string; initiativeName: string; organizationId: string; strategyId: string; teamId: string }, userId: string, sid: string) {
-    return api(`/createaninitiative/${initiativeId}`, {
+    return api(`/createinitiative/${initiativeId}`, {
       method: 'POST',
       headers: { ...hdrs(sid), 'x-user-id': userId },
       body: JSON.stringify(payload)
