@@ -83,6 +83,47 @@ export const useAdminApi = {
     return api(`/deleteenvironmentalchange/${id}`, { method: 'POST', headers: hdrs(sid), body: JSON.stringify(payload) });
   },
 
+  // Strategy API
+  createStrategyDraft(payload: { teamId: string; organizationId: string; title: string; timeframe: string }, userId: string, sid: string) {
+    return api('/api/v1/strategies/draft', {
+      method: 'POST',
+      headers: { ...hdrs(sid), 'x-user-id': userId },
+      body: JSON.stringify(payload)
+    });
+  },
+  getStrategiesByTeam(organizationId: string, teamId: string) {
+    return api(`/strategies?organizationId=${organizationId}&teamId=${teamId}`);
+  },
+
+  // Initiative API
+  createInitiative(initiativeId: string, payload: { initiativeId: string; initiativeName: string; organizationId: string; strategyId: string; teamId: string }, userId: string, sid: string) {
+    return api(`/createaninitiative/${initiativeId}`, {
+      method: 'POST',
+      headers: { ...hdrs(sid), 'x-user-id': userId },
+      body: JSON.stringify(payload)
+    });
+  },
+  getInitiativesByStrategy(strategyId: string, teamId: string, organizationId: string) {
+    return api(`/initiativelist/by-strategy?strategyId=${strategyId}&teamId=${teamId}&organizationId=${organizationId}`);
+  },
+  /** GET /initiativelist/{id} → { data: InitiativesReadModelEntity } */
+  getInitiativeById(initiativeId: string) {
+    return api(`/initiativelist/${initiativeId}`);
+  },
+  /** POST /changeinitiativeitem/{initiativeId} */
+  changeInitiativeItem(
+    initiativeId: string,
+    payload: { initiativeId: string; step: string; itemId: string; content: string; status: string },
+    userId: string,
+    sid: string
+  ) {
+    return api(`/changeinitiativeitem/${initiativeId}`, {
+      method: 'POST',
+      headers: { ...hdrs(sid), 'x-user-id': userId, 'X-Correlation-Id': crypto.randomUUID() },
+      body: JSON.stringify(payload)
+    });
+  },
+
   // Legacy/Compatibility (Can be removed later if not used)
   getRadarList() { return api('/radarlist'); },
   createRadar(environmentalChangeId: string, teamId: string, orgId: string, sid: string) {

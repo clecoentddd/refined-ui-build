@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, List, Target, Plus, Radio, Loader2, Pencil, Trash2 } from 'lucide-react';
@@ -20,6 +21,7 @@ interface TeamPanelProps {
 }
 
 export default function TeamPanel({ team, onRefresh }: TeamPanelProps) {
+  const navigate = useNavigate();
   const { organization } = useAppState();
   const [open, setOpen] = useState(false);
   const [elements, setElements] = useState<RadarElement[]>([]);
@@ -120,6 +122,13 @@ export default function TeamPanel({ team, onRefresh }: TeamPanelProps) {
           <Pill variant={elementCount !== null && elementCount > 0 ? 'primary' : 'default'}>
             {elementCount !== null ? `${elementCount} element${elementCount !== 1 ? 's' : ''}` : 'loading...'}
           </Pill>
+          <button
+            onClick={(e) => { e.stopPropagation(); navigate(`/dashboard/strategy?teamId=${team.teamId}&organizationId=${team.organizationId}&teamName=${encodeURIComponent(team.name)}`); }}
+            title="Strategy dashboard"
+            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-border text-muted-foreground hover:text-primary hover:border-primary/20 hover:bg-primary/5 text-[11px] font-medium transition-all"
+          >
+            <Target className="w-3.5 h-3.5" /> Strategy
+          </button>
           <button
             onClick={openEdit}
             title="Edit team"

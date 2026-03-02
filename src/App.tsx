@@ -9,6 +9,7 @@ import PlatformLoginPage from "./pages/PlatformLoginPage";
 import OrganizationLoginPage from "./pages/OrganizationLoginPage";
 import PlatformDashboardPage from "./pages/PlatformDashboardPage";
 import OrganizationDashboardPage from "./pages/OrganizationDashboardPage";
+import StrategyDashboardPage from "./pages/StrategyDashboardPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="/login/organization" element={<OrganizationLoginPage />} />
             <Route path="/dashboard/platform" element={<PlatformDashboardPage />} />
             <Route path="/dashboard/organization" element={<OrganizationDashboardPage />} />
+            <Route path="/dashboard/strategy" element={<StrategyDashboardPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
