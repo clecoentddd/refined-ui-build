@@ -76,7 +76,8 @@ export default function RadarSVG({ elements, onEdit }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
 
   const R = 300;
-  const FULL = R * 2 + 40;
+  const PAD = 80; // extra padding for corner labels
+  const FULL = R * 2 + PAD * 2;
 
   // Group elements for positioning
   const groups: Record<string, RadarElement[]> = {};
@@ -96,18 +97,18 @@ export default function RadarSVG({ elements, onEdit }: Props) {
 
   const visible = activeQ !== null ? dots.filter(d => d.qIndex === activeQ) : dots;
 
-  // Quadrant label positions — placed inside the radar at the mid-point of each quadrant arc
-  const quadrantLabelData = Object.entries(QUADRANTS).map(([key, q]) => {
-    const midAngle = (Math.PI / 2) * q.index + Math.PI / 4;
-    const lr = R * 0.82;
-    return {
-      key,
-      ...q,
-      x: lr * Math.cos(midAngle),
-      y: lr * Math.sin(midAngle),
-      angle: midAngle,
-    };
-  });
+  // Quadrant label positions — corners of the viewbox
+  const cornerPositions = [
+    { anchor: 'start' as const,  x: R + 12,  y: -(R + 12) }, // index 0: top-right
+    { anchor: 'end' as const,    x: -(R + 12), y: -(R + 12) }, // index 1: top-left
+    { anchor: 'end' as const,    x: -(R + 12), y: R + 20 },    // index 2: bottom-left
+    { anchor: 'start' as const,  x: R + 12,  y: R + 20 },     // index 3: bottom-right
+  ];
+  const quadrantLabelData = Object.entries(QUADRANTS).map(([key, q]) => ({
+    key,
+    ...q,
+    ...cornerPositions[q.index],
+  }));
 
   return (
     <div className="flex flex-col lg:flex-row gap-5 py-4">
@@ -116,7 +117,7 @@ export default function RadarSVG({ elements, onEdit }: Props) {
         <div className="relative w-full" style={{ maxWidth: FULL + 'px' }}>
           <svg
             ref={svgRef}
-            viewBox={`${-R - 20} ${-R - 20} ${FULL} ${FULL}`}
+            viewBox={`${-R - PAD} ${-R - PAD} ${FULL} ${FULL}`}
             className="w-full h-auto"
             style={{ filter: 'drop-shadow(0 0 40px hsl(var(--primary) / 0.06))' }}
           >
@@ -178,21 +179,21 @@ export default function RadarSVG({ elements, onEdit }: Props) {
               </g>
             </g>
 
-            {/* Ring labels along the top-right axis */}
+            {/* Ring labels — vertically centered along the Y-axis */}
             {RING_LABELS.map(({ label, r }) => (
               <g key={label}>
                 <rect
-                  x={R * r * Math.cos(Math.PI / 4) - 20}
-                  y={-(R * r * Math.sin(Math.PI / 4)) - 7}
-                  width={40} height={14} rx={3}
-                  fill="hsl(var(--background))" fillOpacity="0.8"
+                  x={-24}
+                  y={-(R * r) - 8}
+                  width={48} height={16} rx={4}
+                  fill="hsl(var(--background))" fillOpacity="0.85"
                 />
                 <text
-                  x={R * r * Math.cos(Math.PI / 4)}
-                  y={-(R * r * Math.sin(Math.PI / 4)) + 3}
+                  x={0}
+                  y={-(R * r) + 4}
                   textAnchor="middle"
-                  fontSize={8} fontWeight={700} fontFamily="'IBM Plex Mono', monospace"
-                  fill="hsl(var(--muted-foreground))" fillOpacity="0.6"
+                  fontSize={9} fontWeight={700} fontFamily="'IBM Plex Mono', monospace"
+                  fill="hsl(var(--muted-foreground))" fillOpacity="0.7"
                   letterSpacing="1.5"
                 >
                   {label}
@@ -200,34 +201,21 @@ export default function RadarSVG({ elements, onEdit }: Props) {
               </g>
             ))}
 
-            {/* Quadrant labels inside the radar */}
-            {quadrantLabelData.map(q => {
-              const words = q.label.split(' ');
-              const mid = Math.ceil(words.length / 2);
-              const line1 = words.slice(0, mid).join(' ');
-              const line2 = words.length > 1 ? words.slice(mid).join(' ') : null;
-              return (
-                <text
-                  key={q.key} x={q.x} y={q.y}
-                  textAnchor="middle" dominantBaseline="middle"
-                  fontSize={10} fontWeight={700} fontFamily="'Inter', sans-serif"
-                  fill={activeQ === q.index ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))'}
-                  fillOpacity={activeQ === q.index ? 0.9 : 0.35}
-                  className="cursor-pointer select-none uppercase"
-                  letterSpacing="1.5"
-                  onClick={() => setActiveQ(activeQ === q.index ? null : q.index)}
-                >
-                  {line2 ? (
-                    <>
-                      <tspan x={q.x} dy="-6">{line1}</tspan>
-                      <tspan x={q.x} dy="13">{line2}</tspan>
-                    </>
-                  ) : (
-                    <tspan>{line1}</tspan>
-                  )}
-                </text>
-              );
-            })}
+            {/* Quadrant labels — outside radar at corners */}
+            {quadrantLabelData.map(q => (
+              <text
+                key={q.key} x={q.x} y={q.y}
+                textAnchor={q.anchor} dominantBaseline="auto"
+                fontSize={11} fontWeight={700} fontFamily="'Inter', sans-serif"
+                fill={activeQ === q.index ? 'hsl(var(--primary))' : 'hsl(var(--foreground))'}
+                fillOpacity={activeQ === q.index ? 1 : 0.55}
+                className="cursor-pointer select-none uppercase"
+                letterSpacing="2"
+                onClick={() => setActiveQ(activeQ === q.index ? null : q.index)}
+              >
+                {q.label}
+              </text>
+            ))}
 
             {/* Pulsing rings */}
             {[0.3, 0.55, 0.8].map((f, i) => (
