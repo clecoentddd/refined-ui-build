@@ -41,7 +41,7 @@ export const useAdminApi = {
   defineOrganization(payload: { organizationId: string, personId: string, username: string, organizationName: string }, sid: string, userId: string) {
     return api('/defineorganization', {
       method: 'POST',
-      headers: { ...hdrs(sid), 'X-User-Id': userId },
+      headers: { ...hdrs(sid), 'x-user-id': userId },
       body: JSON.stringify(payload)
     });
   },
@@ -103,6 +103,18 @@ export const useAdminApi = {
       body: JSON.stringify(payload)
     });
   },
+  changeInitiative(
+    initiativeId: string,
+    payload: { initiativeId: string; initiativeName: string; organizationId: string; status: string },
+    userId: string,
+    sid: string
+  ) {
+    return api(`/changeinitiative/${initiativeId}`, {
+      method: 'POST',
+      headers: { ...hdrs(sid), 'x-user-id': userId },
+      body: JSON.stringify(payload)
+    });
+  },
   getInitiativesByStrategy(strategyId: string, teamId: string, organizationId: string) {
     return api(`/initiativelist/by-strategy?strategyId=${strategyId}&teamId=${teamId}&organizationId=${organizationId}`);
   },
@@ -111,15 +123,26 @@ export const useAdminApi = {
     return api(`/initiativelist/${initiativeId}`);
   },
   /** POST /changeinitiativeitem/{initiativeId} */
+  /** POST /changeinitiativeitem/{initiativeId} */
   changeInitiativeItem(
     initiativeId: string,
     payload: { initiativeId: string; step: string; itemId: string; content: string; status: string },
     userId: string,
-    sid: string
+    sid: string,
+    organizationId: string // <--- This is the 5th argument
   ) {
+    // CRITICAL: Prevent sending "undefined" string to backend
+    if (!organizationId) {
+      throw new Error(`[STRADAR] Missing organizationId for initiative ${initiativeId}. Check your UI component state.`);
+    }
+
     return api(`/changeinitiativeitem/${initiativeId}`, {
       method: 'POST',
-      headers: { ...hdrs(sid), 'x-user-id': userId, 'X-Correlation-Id': crypto.randomUUID() },
+      headers: {
+        ...hdrs(sid),
+        'x-user-id': userId,
+        'organizationId': organizationId // This sends the header Spring is looking for
+      },
       body: JSON.stringify(payload)
     });
   },

@@ -61,20 +61,46 @@ interface AppState {
   resetOrganization: () => void;
 }
 
+const ORG_SESSION_KEY = 'stradar:org';
+
 const defaultSaas: SaasSession = { sid: null, adminId: null, email: null };
 const defaultOrganization: OrganizationSession = { sid: null, email: null, orgId: null, orgName: null, role: null, adminId: null, username: null, teamId: null };
+
+function loadOrgSession(): OrganizationSession {
+  try {
+    const raw = sessionStorage.getItem(ORG_SESSION_KEY);
+    if (raw) return JSON.parse(raw) as OrganizationSession;
+  } catch { /* ignore */ }
+  return defaultOrganization;
+}
+
+function saveOrgSession(s: OrganizationSession) {
+  try { sessionStorage.setItem(ORG_SESSION_KEY, JSON.stringify(s)); } catch { /* ignore */ }
+}
+
+function clearOrgSession() {
+  try { sessionStorage.removeItem(ORG_SESSION_KEY); } catch { /* ignore */ }
+}
 
 const AppContext = createContext<AppState | null>(null);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [saas, setSaas] = useState<SaasSession>(defaultSaas);
-  const [organization, setOrganization] = useState<OrganizationSession>(defaultOrganization);
+  const [organization, setOrganizationState] = useState<OrganizationSession>(loadOrgSession);
   const [orgs, setOrgs] = useState<Organization[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
 
+  const setOrganization = useCallback((c: OrganizationSession) => {
+    saveOrgSession(c);
+    setOrganizationState(c);
+  }, []);
 
   const resetSaas = useCallback(() => { setSaas(defaultSaas); setOrgs([]); }, []);
-  const resetOrganization = useCallback(() => { setOrganization(defaultOrganization); setTeams([]); }, []);
+  const resetOrganization = useCallback(() => {
+    clearOrgSession();
+    setOrganizationState(defaultOrganization);
+    setTeams([]);
+  }, []);
 
   return (
     <AppContext.Provider value={{ saas, organization, orgs, teams, setSaas, setOrganization, setOrgs, setTeams, resetSaas, resetOrganization }}>

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 import {
   Target, Plus, ChevronRight, Loader2, Flag, ArrowLeft,
-  Save, Clock, LayoutGrid
+  Save, Clock, LayoutGrid, Pencil, Trash2, Check, X
 } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
@@ -37,6 +37,7 @@ interface Initiative {
 interface InitiativeDetail {
   initiativeId: string;
   initiativeName: string;
+  organizationId: string;
   items: Record<StepKey, StrategyItem[]>;
 }
 
@@ -85,6 +86,11 @@ export default function StrategyDashboardPage() {
   const [initiativeSubmitting, setInitiativeSubmitting] = useState(false);
   const [newStrategy, setNewStrategy] = useState({ title: '', timeframe: '' });
   const [newInitiative, setNewInitiative] = useState({ name: '' });
+
+  // ── Rename/delete initiative
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState('');
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // ── Load strategies
   const loadStrategies = useCallback(async () => {
@@ -153,14 +159,16 @@ export default function StrategyDashboardPage() {
     try {
       const r = await useAdminApi.getInitiativeById(initiative.initiativeId);
       const entity = r?.data ?? r;
+      const allItems: any[] = entity?.allItems ?? [];
       const parsed: InitiativeDetail = {
         initiativeId: initiative.initiativeId,
         initiativeName: initiative.initiativeName,
+        organizationId: initiative.organizationId,
         items: {
-          DIAGNOSTIC: mapServerItems(entity?.diagnostic),
-          OVERALLAPPROACH: mapServerItems(entity?.overallPlan),
-          COHERENTACTION: mapServerItems(entity?.coherentActions),
-          PROXIMATEOBJECTIVE: mapServerItems(entity?.proximateObjectives),
+          DIAGNOSTIC: mapServerItems(allItems.filter((i: any) => i.step === 'DIAGNOSTIC')),
+          OVERALLAPPROACH: mapServerItems(allItems.filter((i: any) => i.step === 'OVERALLAPPROACH')),
+          COHERENTACTION: mapServerItems(allItems.filter((i: any) => i.step === 'COHERENTACTION')),
+          PROXIMATEOBJECTIVE: mapServerItems(allItems.filter((i: any) => i.step === 'PROXIMATEOBJECTIVE')),
         }
       };
       setDetail(parsed);
@@ -223,7 +231,7 @@ export default function StrategyDashboardPage() {
       await useAdminApi.changeInitiativeItem(
         detail.initiativeId,
         { initiativeId: detail.initiativeId, step, itemId, content, status: 'ACTIVE' },
-        userId, sid
+        userId, sid, detail.organizationId || organizationId
       );
       if (serverSnapshot.current) {
         const idx = serverSnapshot.current.items[step].findIndex(i => i.itemId === itemId);
@@ -279,7 +287,7 @@ export default function StrategyDashboardPage() {
       await useAdminApi.changeInitiativeItem(
         detail.initiativeId,
         { initiativeId: detail.initiativeId, step, itemId, content: target?.content ?? '', status: 'DELETED' },
-        userId, sid
+        userId, sid, detail.organizationId || organizationId
       );
       if (serverSnapshot.current) {
         serverSnapshot.current.items[step] = serverSnapshot.current.items[step].filter(i => i.itemId !== itemId);
@@ -315,7 +323,7 @@ export default function StrategyDashboardPage() {
       useAdminApi.changeInitiativeItem(
         detail.initiativeId,
         { initiativeId: detail.initiativeId, step, itemId: item.itemId, content: item.content, status: 'ACTIVE' },
-        userId, sid
+        userId, sid, detail.organizationId || organizationId
       ).then(() => {
         unmarkSaving(item.itemId);
         if (serverSnapshot.current) {
@@ -348,6 +356,43 @@ export default function StrategyDashboardPage() {
       setTimeout(loadStrategies, 1500);
     } catch (e: any) { toast.error(`Error: ${e.message}`); }
     setStrategySubmitting(false);
+  };
+
+  // ── Rename initiative
+  const handleRenameInitiative = async (initiative: Initiative) => {
+    const trimmed = renameValue.trim();
+    if (!trimmed || trimmed === initiative.initiativeName) { setRenamingId(null); return; }
+    const prev = initiative.initiativeName;
+    setInitiatives(list => list.map(i => i.initiativeId === initiative.initiativeId ? { ...i, initiativeName: trimmed } : i));
+    setRenamingId(null);
+    try {
+      await useAdminApi.changeInitiative(
+        initiative.initiativeId,
+        { initiativeId: initiative.initiativeId, initiativeName: trimmed, organizationId: initiative.organizationId, status: 'ACTIVE' },
+        userId, sid
+      );
+    } catch (e: any) {
+      setInitiatives(list => list.map(i => i.initiativeId === initiative.initiativeId ? { ...i, initiativeName: prev } : i));
+      toast.error(`Could not rename initiative: ${e.message}`);
+    }
+  };
+
+  // ── Delete initiative
+  const handleDeleteInitiative = async (initiative: Initiative) => {
+    setDeletingId(initiative.initiativeId);
+    const snapshot = initiatives;
+    setInitiatives(list => list.filter(i => i.initiativeId !== initiative.initiativeId));
+    try {
+      await useAdminApi.changeInitiative(
+        initiative.initiativeId,
+        { initiativeId: initiative.initiativeId, initiativeName: initiative.initiativeName, organizationId: initiative.organizationId, status: 'DELETED' },
+        userId, sid
+      );
+    } catch (e: any) {
+      setInitiatives(snapshot);
+      toast.error(`Could not delete initiative: ${e.message}`);
+    }
+    setDeletingId(null);
   };
 
   // ── Create initiative
@@ -507,21 +552,55 @@ export default function StrategyDashboardPage() {
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {initiatives.map(i => (
-                    <button
+                    <div
                       key={i.initiativeId}
-                      onClick={() => selectInitiative(i)}
-                      className="group text-left p-5 rounded-xl border border-border bg-card hover:border-primary/30 hover:shadow-md transition-all"
+                      className="group relative text-left p-5 rounded-xl border border-border bg-card hover:border-primary/30 hover:shadow-md transition-all"
                     >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <LayoutGrid className="w-4 h-4 text-primary flex-shrink-0" />
-                            <h3 className="font-semibold text-sm text-foreground truncate">{i.initiativeName}</h3>
+                      {renamingId === i.initiativeId ? (
+                        /* ── Inline rename ── */
+                        <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
+                          <LayoutGrid className="w-4 h-4 text-primary flex-shrink-0" />
+                          <input
+                            autoFocus
+                            className="flex-1 bg-transparent border-b border-primary text-sm font-semibold text-foreground outline-none min-w-0"
+                            value={renameValue}
+                            onChange={e => setRenameValue(e.target.value)}
+                            onKeyDown={e => { if (e.key === 'Enter') handleRenameInitiative(i); if (e.key === 'Escape') setRenamingId(null); }}
+                          />
+                          <button onClick={() => handleRenameInitiative(i)} className="text-primary hover:opacity-70"><Check className="w-4 h-4" /></button>
+                          <button onClick={() => setRenamingId(null)} className="text-muted-foreground hover:opacity-70"><X className="w-4 h-4" /></button>
+                        </div>
+                      ) : (
+                        /* ── Normal card ── */
+                        <div className="flex items-start justify-between gap-3">
+                          <button className="min-w-0 flex-1 text-left" onClick={() => selectInitiative(i)}>
+                            <div className="flex items-center gap-2 mb-1">
+                              <LayoutGrid className="w-4 h-4 text-primary flex-shrink-0" />
+                              <h3 className="font-semibold text-sm text-foreground truncate">{i.initiativeName}</h3>
+                            </div>
+                          </button>
+                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                              onClick={e => { e.stopPropagation(); setRenamingId(i.initiativeId); setRenameValue(i.initiativeName); }}
+                              className="p-1 rounded hover:bg-muted/40 text-muted-foreground hover:text-foreground transition-colors"
+                              title="Rename"
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={e => { e.stopPropagation(); handleDeleteInitiative(i); }}
+                              disabled={deletingId === i.initiativeId}
+                              className="p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors disabled:opacity-40"
+                              title="Delete"
+                            >
+                              {deletingId === i.initiativeId
+                                ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                : <Trash2 className="w-3.5 h-3.5" />}
+                            </button>
                           </div>
                         </div>
-                        <ChevronRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-primary transition-colors flex-shrink-0 mt-0.5" />
-                      </div>
-                    </button>
+                      )}
+                    </div>
                   ))}
                 </div>
               )}
