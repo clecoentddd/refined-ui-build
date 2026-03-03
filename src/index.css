@@ -145,6 +145,10 @@
   100% { transform: rotate(360deg); }
 }
 
+.animate-radar-sweep {
+  animation: radar-sweep 8s linear infinite;
+}
+
 @keyframes dot-ping {
   0% { opacity: 1; transform: scale(1); }
   75%, 100% { opacity: 0; transform: scale(2.5); }
