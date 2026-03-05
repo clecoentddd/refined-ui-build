@@ -9,7 +9,7 @@ import { useAdminApi } from '@/services/api';
 import Pill from '@/components/Pill';
 import EmptyState from '@/components/EmptyState';
 import RadarElementCard from '@/components/RadarElementCard';
-import RadarSVG from '@/components/RadarSVG';
+import RadarSVG from '@/components/RadarPanel';
 import DetectElementModal from '@/components/DetectElementModal';
 import UpdateElementModal from '@/components/UpdateElementModal';
 import Modal from '@/components/Modal';
@@ -45,7 +45,7 @@ export default function TeamPanel({ team, onRefresh }: TeamPanelProps) {
   const loadRadar = async () => {
     setLoading(true);
     try {
-      const r = await useAdminApi.getEnvironmentalChangesForTeam(team.teamId);
+      const r = await useAdminApi.getEnvironmentalChangesForTeam(team.teamId, organization.orgId!);
       const els = r || [];
       setElements(els);
       setElementCount(els.length);
@@ -191,7 +191,7 @@ export default function TeamPanel({ team, onRefresh }: TeamPanelProps) {
                   </div>
                 )
               ) : (
-                <RadarSVG elements={elements} onEdit={setUpdateEl} />
+                <RadarSVG elements={elements} onEdit={(el) => setUpdateEl(el)} />
               )}
             </div>
           </motion.div>

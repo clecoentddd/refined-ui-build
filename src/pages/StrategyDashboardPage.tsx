@@ -248,7 +248,7 @@ export default function StrategyDashboardPage() {
     const orgId = initiative.organizationId || organizationId;
     try {
       const [changesRaw, linksRaw] = await Promise.all([
-        useAdminApi.getEnvironmentalChangesForTeam(initiative.teamId),
+        useAdminApi.getEnvironmentalChangesForTeam(initiative.teamId, orgId),
         useAdminApi.getEnvLinks(initiative.initiativeId, orgId),
       ]);
       const changes: EnvChange[] = (Array.isArray(changesRaw) ? changesRaw : changesRaw?.items ?? [])
@@ -663,20 +663,18 @@ export default function StrategyDashboardPage() {
                     return (
                       <div
                         key={s.strategyId}
-                        className={`rounded-xl border transition-all overflow-hidden ${
-                          isExpanded
+                        className={`rounded-xl border transition-all overflow-hidden ${isExpanded
                             ? 'border-primary/30 bg-card shadow-md'
                             : 'border-border bg-card hover:border-primary/20 hover:shadow-sm'
-                        }`}
+                          }`}
                       >
                         {/* Strategy header row */}
                         <button
                           onClick={() => toggleStrategy(s)}
                           className="w-full flex items-center gap-4 px-5 py-4 text-left group"
                         >
-                          <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                            isExpanded ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-                          }`}>
+                          <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${isExpanded ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                            }`}>
                             <Target className="w-4 h-4" />
                           </div>
 
@@ -696,9 +694,8 @@ export default function StrategyDashboardPage() {
                             </div>
                           </div>
 
-                          <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform duration-200 flex-shrink-0 ${
-                            isExpanded ? 'rotate-180' : ''
-                          }`} />
+                          <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform duration-200 flex-shrink-0 ${isExpanded ? 'rotate-180' : ''
+                            }`} />
                         </button>
 
                         {/* Expanded initiatives */}

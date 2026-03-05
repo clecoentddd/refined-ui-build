@@ -57,8 +57,11 @@ export const useAdminApi = {
   createTeam(payload: any, sid: string) {
     return api('/createteam', { method: 'POST', headers: hdrs(sid), body: JSON.stringify(payload) });
   },
-  getTeamList() { return api('/teamlist'); },
-  getTeamListByOrg(organizationId: string) { return api(`/teamlist/${organizationId}`); },
+  getTeamListByOrg(organizationId: string) {
+    return api('/teamlist', {
+      headers: { ...hdrs(), 'organizationId': organizationId },
+    });
+  },
   updateTeam(teamId: string, payload: { teamId: string; organizationId: string; name: string; purpose: string; context: string; level: number }, sid: string) {
     return api(`/updateteam/${teamId}`, { method: 'POST', headers: hdrs(sid), body: JSON.stringify(payload) });
   },
@@ -67,11 +70,15 @@ export const useAdminApi = {
   },
 
   // Environmental Changes API
-  getEnvironmentalChangesForTeam(teamId: string) {
-    return api(`/environmentalchanges/team/${teamId}`);
+  getEnvironmentalChangesForTeam(teamId: string, organizationId: string) {
+    return api(`/environmentalchanges/team/${teamId}`, {
+      headers: { ...hdrs(), 'organizationId': organizationId },
+    });
   },
-  getEnvironmentalChangeDetails(environmentalChangeId: string) {
-    return api(`/environmentalchanges/${environmentalChangeId}`);
+  getEnvironmentalChangeDetails(environmentalChangeId: string, organizationId: string) {
+    return api(`/environmentalchanges/${environmentalChangeId}`, {
+      headers: { ...hdrs(), 'organizationId': organizationId },
+    });
   },
   detectEnvironmentalChange(payload: any, sid: string) {
     return api('/detectenvironmentalchange', { method: 'POST', headers: hdrs(sid), body: JSON.stringify(payload) });
@@ -91,8 +98,10 @@ export const useAdminApi = {
       body: JSON.stringify(payload)
     });
   },
-  getStrategiesByTeam(organizationId: string, teamId: string) {
-    return api(`/strategies?organizationId=${organizationId}&teamId=${teamId}`);
+  getStrategiesByTeam(organizationId: string, _teamId?: string) {
+    return api(`/strategies`, {
+      headers: { ...hdrs(), 'organizationId': organizationId },
+    });
   },
 
   // Initiative API
