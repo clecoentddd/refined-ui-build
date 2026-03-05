@@ -116,11 +116,55 @@ export const useAdminApi = {
     });
   },
   getInitiativesByStrategy(strategyId: string, teamId: string, organizationId: string) {
-    return api(`/initiativelist/by-strategy?strategyId=${strategyId}&teamId=${teamId}&organizationId=${organizationId}`);
+    // 1. Remove organizationId from the URL string
+    // 2. Add it to the headers object
+    return api(`/initiativelist/by-strategy?strategyId=${strategyId}&teamId=${teamId}`, {
+      method: 'GET',
+      headers: {
+        ...hdrs(), // Assuming hdrs() returns content-type, etc.
+        'organizationId': organizationId
+      }
+    });
   },
   /** GET /initiativelist/{id} → { data: InitiativesReadModelEntity } */
-  getInitiativeById(initiativeId: string) {
-    return api(`/initiativelist/${initiativeId}`);
+  getInitiativeById(initiativeId: string, organizationId: string) {
+    return api(`/initiativelist/${initiativeId}`, {
+      method: 'GET',
+      headers: {
+        ...hdrs(),
+        'organizationId': organizationId
+      }
+    });
+  },
+  /** GET /env-links/{initiativeId} — returns [{id, name}] */
+  getEnvLinks(initiativeId: string, organizationId: string) {
+    return api(`/env-links/${initiativeId}`, {
+      method: 'GET',
+      headers: { ...hdrs(), 'organizationId': organizationId },
+    });
+  },
+  /** POST /env-links/{initiativeId} — replaces the full linked list */
+  updateEnvLinks(initiativeId: string, links: { id: string; name: string }[], organizationId: string) {
+    return api(`/env-links/${initiativeId}`, {
+      method: 'POST',
+      headers: { ...hdrs(), 'organizationId': organizationId },
+      body: JSON.stringify(links),
+    });
+  },
+  /** GET /initiative-links/{initiativeId} — returns [{id, name}] */
+  getInitiativeLinks(initiativeId: string, organizationId: string) {
+    return api(`/initiative-links/${initiativeId}`, {
+      method: 'GET',
+      headers: { ...hdrs(), 'organizationId': organizationId },
+    });
+  },
+  /** POST /initiative-links/{initiativeId} — replaces the full linked list */
+  updateInitiativeLinks(initiativeId: string, links: { id: string; name: string }[], organizationId: string) {
+    return api(`/initiative-links/${initiativeId}`, {
+      method: 'POST',
+      headers: { ...hdrs(), 'organizationId': organizationId },
+      body: JSON.stringify(links),
+    });
   },
   /** POST /changeinitiativeitem/{initiativeId} */
   /** POST /changeinitiativeitem/{initiativeId} */

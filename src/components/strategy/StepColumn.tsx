@@ -16,29 +16,29 @@ export const STEPS: StepConfig[] = [
     key: 'DIAGNOSTIC',
     label: 'The Diagnosis',
     subtitle: 'What is the core challenge?',
-    icon: '🔍',
-    accentClass: 'border-t-violet-500',
+    icon: '1',
+    accentClass: 'border-t-primary/60',
   },
   {
     key: 'OVERALLAPPROACH',
     label: 'Guiding Policy',
     subtitle: 'How do we approach it?',
-    icon: '🧭',
-    accentClass: 'border-t-blue-500',
+    icon: '2',
+    accentClass: 'border-t-primary/60',
   },
   {
     key: 'COHERENTACTION',
     label: 'Coherent Actions',
-    subtitle: 'What do we actually do?',
-    icon: '⚡',
-    accentClass: 'border-t-emerald-500',
+    subtitle: 'What combined actions can we take?',
+    icon: '3',
+    accentClass: 'border-t-primary/60',
   },
   {
     key: 'PROXIMATEOBJECTIVE',
     label: 'Proximate Objectives',
     subtitle: 'Measurable near-term goals',
-    icon: '🎯',
-    accentClass: 'border-t-amber-500',
+    icon: '4',
+    accentClass: 'border-t-primary/60',
   },
 ];
 
@@ -56,12 +56,14 @@ export default function StepColumn({ step, items, savingIds, onSaveItem, onDelet
     <div className={`flex flex-col h-full rounded-xl border border-border bg-card overflow-hidden border-t-[3px] ${step.accentClass}`}>
       {/* Column header */}
       <div className="px-4 pt-4 pb-3 border-b border-border bg-muted/20">
-        <div className="flex items-center gap-2 mb-1">
-          <span className="text-base">{step.icon}</span>
+        <div className="flex items-center gap-2.5 mb-1">
+          <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-[11px] font-bold flex items-center justify-center flex-shrink-0">
+            {step.icon}
+          </span>
           <span className="font-semibold text-sm text-foreground">{step.label}</span>
         </div>
-        <p className="text-xs text-muted-foreground">{step.subtitle}</p>
-        <div className="mt-2 inline-flex items-center gap-1.5 text-xs text-muted-foreground bg-background rounded-md px-2 py-0.5 border border-border">
+        <p className="text-xs text-muted-foreground pl-8">{step.subtitle}</p>
+        <div className="mt-2 ml-8 inline-flex items-center gap-1.5 text-xs text-muted-foreground bg-background rounded-md px-2 py-0.5 border border-border">
           {items.length} item{items.length !== 1 ? 's' : ''}
         </div>
       </div>
