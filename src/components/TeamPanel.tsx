@@ -184,7 +184,7 @@ export default function TeamPanel({ team, onRefresh }: TeamPanelProps) {
                 elements.length === 0 ? (
                   <EmptyState icon={<Radio className="w-6 h-6 opacity-30" />} message="No elements yet. Detect the first one." />
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  <div className="rounded-xl border border-border overflow-hidden bg-card">
                     {elements.map(el => (
                       <RadarElementCard key={el.environmentalChangeId} element={el} onEdit={() => setUpdateEl(el)} onDelete={() => handleDeleteElement(el.environmentalChangeId)} />
                     ))}
