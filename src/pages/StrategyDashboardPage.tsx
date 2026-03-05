@@ -1,15 +1,17 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 import {
-  Target, Plus, ChevronRight, Loader2, Flag, ArrowLeft,
+  Target, Plus, ChevronRight, ChevronDown, Loader2, Flag, ArrowLeft,
   Save, Clock, LayoutGrid, Pencil, Trash2, Check, X, Link, Search
 } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { motion, AnimatePresence } from 'framer-motion';
 import Navbar from '@/components/Navbar';
 import EmptyState from '@/components/EmptyState';
 import Modal from '@/components/Modal';
 import { FormField, FormInput } from '@/components/FormElements';
+import Pill from '@/components/Pill';
 import { useAppState } from '@/context/AppContext';
 import { useAdminApi } from '@/services/api';
 import StepColumn, { STEPS, type StepKey } from '@/components/strategy/StepColumn';
@@ -77,6 +79,9 @@ export default function StrategyDashboardPage() {
   const [strategies, setStrategies] = useState<Strategy[]>([]);
   const [strategiesLoading, setStrategiesLoading] = useState(false);
   const [selectedStrategy, setSelectedStrategy] = useState<Strategy | null>(null);
+  const [expandedStrategyIds, setExpandedStrategyIds] = useState<Set<string>>(new Set());
+  const [initiativesByStrategy, setInitiativesByStrategy] = useState<Record<string, Initiative[]>>({});
+  const [loadingInitiativeIds, setLoadingInitiativeIds] = useState<Set<string>>(new Set());
 
   // ── Initiatives
   const [initiatives, setInitiatives] = useState<Initiative[]>([]);
@@ -145,28 +150,41 @@ export default function StrategyDashboardPage() {
 
   // ── Load initiatives
   const loadInitiatives = useCallback(async (strategy: Strategy) => {
-    setInitiativesLoading(true);
-    setSelectedInitiative(null);
-    setDetail(null);
-    serverSnapshot.current = null;
+    setLoadingInitiativeIds(prev => new Set(prev).add(strategy.strategyId));
     try {
       const r = await useAdminApi.getInitiativesByStrategy(
         strategy.strategyId, strategy.teamId, strategy.organizationId
       );
       const list: Initiative[] = Array.isArray(r) ? r : (r?.initiatives ?? r?.items ?? []);
-      setInitiatives(list);
+      setInitiativesByStrategy(prev => ({ ...prev, [strategy.strategyId]: list }));
+      setInitiatives(list); // keep legacy state for board view
     } catch {
+      setInitiativesByStrategy(prev => ({ ...prev, [strategy.strategyId]: [] }));
       setInitiatives([]);
     }
-    setInitiativesLoading(false);
+    setLoadingInitiativeIds(prev => { const s = new Set(prev); s.delete(strategy.strategyId); return s; });
   }, []);
+
+  const toggleStrategy = (s: Strategy) => {
+    setExpandedStrategyIds(prev => {
+      const next = new Set(prev);
+      if (next.has(s.strategyId)) {
+        next.delete(s.strategyId);
+      } else {
+        next.add(s.strategyId);
+        if (!initiativesByStrategy[s.strategyId]) {
+          loadInitiatives(s);
+        }
+      }
+      return next;
+    });
+  };
 
   const selectStrategy = (s: Strategy) => {
     setSelectedStrategy(s);
     setSelectedInitiative(null);
     setDetail(null);
-    setInitiatives([]);
-    loadInitiatives(s);
+    setInitiatives(initiativesByStrategy[s.strategyId] ?? []);
   };
 
   const backToStrategies = () => {
@@ -554,50 +572,55 @@ export default function StrategyDashboardPage() {
     );
   }
 
+  // ── Status pill variant
+  const statusVariant = (s?: string): 'default' | 'primary' | 'success' | 'warning' | 'destructive' => {
+    if (!s) return 'default';
+    const low = s.toLowerCase();
+    if (low === 'active') return 'success';
+    if (low === 'draft') return 'warning';
+    if (low === 'archived' || low === 'deleted') return 'destructive';
+    return 'primary';
+  };
+
   // ── Determine current view
-  const view: 'strategies' | 'initiatives' | 'board' =
-    selectedInitiative ? 'board' : selectedStrategy ? 'initiatives' : 'strategies';
+  const view: 'list' | 'board' = selectedInitiative ? 'board' : 'list';
 
   // ── Render
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar variant="organization" />
 
-      {/* ── Top bar with breadcrumb + actions ── */}
+      {/* ── Top bar ── */}
       <div className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="max-w-[1600px] mx-auto px-6 py-3 flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <button
-              onClick={() => navigate('/dashboard/organization')}
+              onClick={() => view === 'board' ? backToStrategies() : navigate('/dashboard/organization')}
               className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span className="hidden sm:inline">Back</span>
+              <span className="hidden sm:inline">{view === 'board' ? 'Strategies' : 'Back'}</span>
             </button>
-            <div className="w-px h-5 bg-border" />
-            <StrategyBreadcrumb
-              teamName={teamName}
-              strategyTitle={selectedStrategy?.title}
-              initiativeName={selectedInitiative?.initiativeName}
-              onBackToStrategies={backToStrategies}
-              onBackToInitiatives={backToInitiatives}
-            />
+            {view === 'board' && selectedStrategy && selectedInitiative && (
+              <>
+                <div className="w-px h-5 bg-border" />
+                <StrategyBreadcrumb
+                  teamName={teamName}
+                  strategyTitle={selectedStrategy.title}
+                  initiativeName={selectedInitiative.initiativeName}
+                  onBackToStrategies={backToStrategies}
+                  onBackToInitiatives={backToInitiatives}
+                />
+              </>
+            )}
           </div>
           <div className="flex items-center gap-2">
-            {view === 'strategies' && (
+            {view === 'list' && (
               <button
                 onClick={() => setStrategyModalOpen(true)}
                 className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground rounded-lg px-4 py-2 font-semibold text-xs hover:opacity-90 transition-all"
               >
                 <Plus className="w-3.5 h-3.5" /> New Strategy
-              </button>
-            )}
-            {view === 'initiatives' && (
-              <button
-                onClick={() => setInitiativeModalOpen(true)}
-                className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground rounded-lg px-4 py-2 font-semibold text-xs hover:opacity-90 transition-all"
-              >
-                <Plus className="w-3.5 h-3.5" /> New Initiative
               </button>
             )}
             {view === 'board' && detail && (
@@ -616,114 +639,159 @@ export default function StrategyDashboardPage() {
       <div className="flex-1 overflow-auto">
         <div className="max-w-[1600px] mx-auto px-6 py-6">
 
-          {/* ── STRATEGIES VIEW ── */}
-          {view === 'strategies' && (
+          {/* ── STRATEGIES + INITIATIVES (accordion list) ── */}
+          {view === 'list' && (
             <>
-              <div className="mb-6">
-                <h1 className="text-xl font-bold tracking-tight text-foreground">Strategies</h1>
-                <p className="text-sm text-muted-foreground mt-1">Team: {teamName} · {strategies.length} strateg{strategies.length === 1 ? 'y' : 'ies'}</p>
+              <div className="mb-8">
+                <h1 className="text-2xl font-bold tracking-tight text-foreground">Strategies</h1>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {teamName} · {strategies.length} strateg{strategies.length === 1 ? 'y' : 'ies'}
+                </p>
               </div>
+
               {strategiesLoading ? (
                 <EmptyState icon={<Loader2 className="w-6 h-6 animate-spin opacity-30" />} message="Loading strategies…" />
               ) : strategies.length === 0 ? (
                 <EmptyState icon={<Target className="w-8 h-8 opacity-30" />} message="No strategies yet. Create one to get started." />
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {strategies.map(s => (
-                    <button
-                      key={s.strategyId}
-                      onClick={() => selectStrategy(s)}
-                      className="group text-left p-5 rounded-xl border border-border bg-card hover:border-primary/30 hover:shadow-md transition-all"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Target className="w-4 h-4 text-primary flex-shrink-0" />
-                            <h3 className="font-semibold text-sm text-foreground truncate">{s.title}</h3>
-                          </div>
-                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                            <Clock className="w-3 h-3" />
-                            {s.timeframe}
-                          </div>
-                          {s.status && (
-                            <span className="inline-block mt-3 text-[10px] uppercase font-semibold tracking-wider px-2 py-0.5 rounded-full border border-border bg-muted/30 text-muted-foreground">
-                              {s.status}
-                            </span>
-                          )}
-                        </div>
-                        <ChevronRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-primary transition-colors flex-shrink-0 mt-1" />
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </>
-          )}
+                <div className="space-y-3">
+                  {strategies.map(s => {
+                    const isExpanded = expandedStrategyIds.has(s.strategyId);
+                    const sInitiatives = initiativesByStrategy[s.strategyId] ?? [];
+                    const isLoadingInit = loadingInitiativeIds.has(s.strategyId);
 
-          {/* ── INITIATIVES VIEW ── */}
-          {view === 'initiatives' && selectedStrategy && (
-            <>
-              <div className="mb-6">
-                <h1 className="text-xl font-bold tracking-tight text-foreground">Initiatives</h1>
-                <p className="text-sm text-muted-foreground mt-1">Strategy: {selectedStrategy.title} · {initiatives.length} initiative{initiatives.length !== 1 ? 's' : ''}</p>
-              </div>
-              {initiativesLoading ? (
-                <EmptyState icon={<Loader2 className="w-6 h-6 animate-spin opacity-30" />} message="Loading initiatives…" />
-              ) : initiatives.length === 0 ? (
-                <EmptyState icon={<Flag className="w-7 h-7 opacity-30" />} message="No initiatives yet. Create one to start planning." />
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {initiatives.map(i => (
-                    <div
-                      key={i.initiativeId}
-                      className="group relative text-left p-5 rounded-xl border border-border bg-card hover:border-primary/30 hover:shadow-md transition-all"
-                    >
-                      {renamingId === i.initiativeId ? (
-                        /* ── Inline rename ── */
-                        <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
-                          <LayoutGrid className="w-4 h-4 text-primary flex-shrink-0" />
-                          <input
-                            autoFocus
-                            className="flex-1 bg-transparent border-b border-primary text-sm font-semibold text-foreground outline-none min-w-0"
-                            value={renameValue}
-                            onChange={e => setRenameValue(e.target.value)}
-                            onKeyDown={e => { if (e.key === 'Enter') handleRenameInitiative(i); if (e.key === 'Escape') setRenamingId(null); }}
-                          />
-                          <button onClick={() => handleRenameInitiative(i)} className="text-primary hover:opacity-70"><Check className="w-4 h-4" /></button>
-                          <button onClick={() => setRenamingId(null)} className="text-muted-foreground hover:opacity-70"><X className="w-4 h-4" /></button>
-                        </div>
-                      ) : (
-                        /* ── Normal card ── */
-                        <div className="flex items-start justify-between gap-3">
-                          <button className="min-w-0 flex-1 text-left" onClick={() => selectInitiative(i)}>
-                            <div className="flex items-center gap-2 mb-1">
-                              <LayoutGrid className="w-4 h-4 text-primary flex-shrink-0" />
-                              <h3 className="font-semibold text-sm text-foreground truncate">{i.initiativeName}</h3>
-                            </div>
-                          </button>
-                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button
-                              onClick={e => { e.stopPropagation(); setRenamingId(i.initiativeId); setRenameValue(i.initiativeName); }}
-                              className="p-1 rounded hover:bg-muted/40 text-muted-foreground hover:text-foreground transition-colors"
-                              title="Rename"
-                            >
-                              <Pencil className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              onClick={e => { e.stopPropagation(); handleDeleteInitiative(i); }}
-                              disabled={deletingId === i.initiativeId}
-                              className="p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors disabled:opacity-40"
-                              title="Delete"
-                            >
-                              {deletingId === i.initiativeId
-                                ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                : <Trash2 className="w-3.5 h-3.5" />}
-                            </button>
+                    return (
+                      <div
+                        key={s.strategyId}
+                        className={`rounded-xl border transition-all overflow-hidden ${
+                          isExpanded
+                            ? 'border-primary/30 bg-card shadow-md'
+                            : 'border-border bg-card hover:border-primary/20 hover:shadow-sm'
+                        }`}
+                      >
+                        {/* Strategy header row */}
+                        <button
+                          onClick={() => toggleStrategy(s)}
+                          className="w-full flex items-center gap-4 px-5 py-4 text-left group"
+                        >
+                          <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                            isExpanded ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                          }`}>
+                            <Target className="w-4 h-4" />
                           </div>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2.5 mb-0.5">
+                              <h3 className="font-semibold text-foreground truncate">{s.title}</h3>
+                              {s.status && <Pill variant={statusVariant(s.status)}>{s.status}</Pill>}
+                            </div>
+                            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                              <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{s.timeframe}</span>
+                              {initiativesByStrategy[s.strategyId] && (
+                                <span className="flex items-center gap-1">
+                                  <Flag className="w-3 h-3" />
+                                  {sInitiatives.length} initiative{sInitiatives.length !== 1 ? 's' : ''}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform duration-200 flex-shrink-0 ${
+                            isExpanded ? 'rotate-180' : ''
+                          }`} />
+                        </button>
+
+                        {/* Expanded initiatives */}
+                        <AnimatePresence>
+                          {isExpanded && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.2 }}
+                              className="overflow-hidden"
+                            >
+                              <div className="border-t border-border bg-muted/20 px-5 py-4">
+                                {isLoadingInit ? (
+                                  <div className="flex items-center gap-2 text-sm text-muted-foreground py-3">
+                                    <Loader2 className="w-4 h-4 animate-spin" /> Loading initiatives…
+                                  </div>
+                                ) : sInitiatives.length === 0 ? (
+                                  <p className="text-sm text-muted-foreground/50 italic py-2">No initiatives yet</p>
+                                ) : (
+                                  <div className="space-y-1">
+                                    {sInitiatives.map(i => (
+                                      <div
+                                        key={i.initiativeId}
+                                        className="group flex items-center gap-3 rounded-lg px-3 py-2.5 hover:bg-background transition-colors"
+                                      >
+                                        {renamingId === i.initiativeId ? (
+                                          <div className="flex items-center gap-2 flex-1" onClick={e => e.stopPropagation()}>
+                                            <LayoutGrid className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                                            <input
+                                              autoFocus
+                                              className="flex-1 bg-transparent border-b border-primary text-sm font-medium text-foreground outline-none min-w-0"
+                                              value={renameValue}
+                                              onChange={e => setRenameValue(e.target.value)}
+                                              onKeyDown={e => { if (e.key === 'Enter') handleRenameInitiative(i); if (e.key === 'Escape') setRenamingId(null); }}
+                                            />
+                                            <button onClick={() => handleRenameInitiative(i)} className="text-primary hover:opacity-70"><Check className="w-3.5 h-3.5" /></button>
+                                            <button onClick={() => setRenamingId(null)} className="text-muted-foreground hover:opacity-70"><X className="w-3.5 h-3.5" /></button>
+                                          </div>
+                                        ) : (
+                                          <>
+                                            <button
+                                              className="flex items-center gap-2.5 flex-1 min-w-0 text-left"
+                                              onClick={() => {
+                                                setSelectedStrategy(s);
+                                                setInitiatives(sInitiatives);
+                                                selectInitiative(i);
+                                              }}
+                                            >
+                                              <LayoutGrid className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                                              <span className="text-sm font-medium text-foreground truncate">{i.initiativeName}</span>
+                                            </button>
+                                            <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                                              <button
+                                                onClick={e => { e.stopPropagation(); setRenamingId(i.initiativeId); setRenameValue(i.initiativeName); }}
+                                                className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                                                title="Rename"
+                                              >
+                                                <Pencil className="w-3 h-3" />
+                                              </button>
+                                              <button
+                                                onClick={e => { e.stopPropagation(); handleDeleteInitiative(i); }}
+                                                disabled={deletingId === i.initiativeId}
+                                                className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors disabled:opacity-40"
+                                                title="Delete"
+                                              >
+                                                {deletingId === i.initiativeId
+                                                  ? <Loader2 className="w-3 h-3 animate-spin" />
+                                                  : <Trash2 className="w-3 h-3" />}
+                                              </button>
+                                              <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40 ml-1" />
+                                            </div>
+                                          </>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+
+                                {/* Add initiative button */}
+                                <button
+                                  onClick={() => { setSelectedStrategy(s); setInitiativeModalOpen(true); }}
+                                  className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors px-3 py-1.5"
+                                >
+                                  <Plus className="w-3 h-3" /> Add initiative
+                                </button>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </>
