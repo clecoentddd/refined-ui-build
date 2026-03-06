@@ -19,7 +19,7 @@ export default function OrganizationDashboardPage() {
 
   const loadTeams = async () => {
     try {
-      const r = await useAdminApi.getTeamListByOrg(organization.orgId!);
+      const r = await useAdminApi.getTeamListByOrg(organization.orgId!, organization.userId!);
       setTeams(r.teams || []);
     } catch { setTeams([]); }
   };
@@ -36,7 +36,7 @@ export default function OrganizationDashboardPage() {
       level: parseInt(newTeam.level) || 1,
     };
     try {
-      await useAdminApi.createTeam(payload, organization.sid!);
+      await useAdminApi.createTeam(payload, organization.sid!, organization.userId!);
       setTeamModalOpen(false);
       setNewTeam({ name: '', purpose: '', context: '', level: '1' });
       toast.success(`Team "${newTeam.name}" created`);

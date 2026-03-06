@@ -42,7 +42,7 @@ export const RINGS: Record<string, number> = {
 const RING_LABELS: { label: string; r: number }[] = [
   { label: 'DETECT', r: RINGS.DETECTED },
   { label: 'ASSESS', r: RINGS.ASSESSING },
-  { label: 'RESPOND', r: RINGS.ASSESSED },
+  { label: 'ASSESSED', r: RINGS.ASSESSED },
   { label: 'RESPONDING', r: RINGS.RESPONDING },
 ];
 

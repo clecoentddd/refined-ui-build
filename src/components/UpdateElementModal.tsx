@@ -40,7 +40,7 @@ export default function UpdateElementModal({ open, onClose, element, teamId, onS
       ...form,
     };
     try {
-      await useAdminApi.updateEnvironmentalChange(element.environmentalChangeId, payload, organization.sid!);
+      await useAdminApi.updateEnvironmentalChange(element.environmentalChangeId, payload, organization.sid!, organization.userId!);
       onClose();
       toast.success('Element updated');
       setTimeout(onSuccess, 1000);

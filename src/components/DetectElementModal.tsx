@@ -33,7 +33,7 @@ export default function DetectElementModal({ open, onClose, teamId, teamName, on
       ...form,
     };
     try {
-      await useAdminApi.detectEnvironmentalChange(payload, organization.sid!);
+      await useAdminApi.detectEnvironmentalChange(payload, organization.sid!, organization.userId!);
       onClose();
       toast.success(`"${form.title}" detected`);
       setForm({ title: '', type: 'THREAT', category: 'BUSINESS', distance: 'DETECTED', impact: 'LOW', risk: 'LOW', assess: '', detect: '', respond: '' });

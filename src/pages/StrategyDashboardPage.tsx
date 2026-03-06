@@ -130,7 +130,7 @@ export default function StrategyDashboardPage() {
     if (!teamId || !organizationId) return;
     setStrategiesLoading(true);
     try {
-      const r = await useAdminApi.getStrategiesByTeam(organizationId, teamId);
+      const r = await useAdminApi.getStrategiesByTeam(organizationId, organization.userId!, teamId);
       const raw: any[] = Array.isArray(r) ? r : (r?.strategies ?? []);
       setStrategies(raw.map((s: any) => ({
         strategyId: s.strategyId,
@@ -140,7 +140,8 @@ export default function StrategyDashboardPage() {
         timeframe: s.strategyTimeframe ?? s.timeframe ?? '',
         status: s.status,
       })));
-    } catch {
+    } catch (e: any) {
+      toast.error(`Could not load strategies: ${e.message || 'Unknown error'}`);
       setStrategies([]);
     }
     setStrategiesLoading(false);
@@ -153,12 +154,13 @@ export default function StrategyDashboardPage() {
     setLoadingInitiativeIds(prev => new Set(prev).add(strategy.strategyId));
     try {
       const r = await useAdminApi.getInitiativesByStrategy(
-        strategy.strategyId, strategy.teamId, strategy.organizationId
+        strategy.strategyId, strategy.teamId, strategy.organizationId, organization.userId!
       );
       const list: Initiative[] = Array.isArray(r) ? r : (r?.initiatives ?? r?.items ?? []);
       setInitiativesByStrategy(prev => ({ ...prev, [strategy.strategyId]: list }));
       setInitiatives(list); // keep legacy state for board view
-    } catch {
+    } catch (e: any) {
+      toast.error(`Could not load initiatives: ${e.message || 'Unknown error'}`);
       setInitiativesByStrategy(prev => ({ ...prev, [strategy.strategyId]: [] }));
       setInitiatives([]);
     }
@@ -203,7 +205,7 @@ export default function StrategyDashboardPage() {
   const loadDetail = useCallback(async (initiative: Initiative) => {
     setDetailLoading(true);
     try {
-      const r = await useAdminApi.getInitiativeById(initiative.initiativeId, initiative.organizationId);
+      const r = await useAdminApi.getInitiativeById(initiative.initiativeId, initiative.organizationId, organization.userId!);
       const entity = r?.data ?? r;
       const allItems: any[] = entity?.allItems ?? [];
       const parsed: InitiativeDetail = {
@@ -248,8 +250,8 @@ export default function StrategyDashboardPage() {
     const orgId = initiative.organizationId || organizationId;
     try {
       const [changesRaw, linksRaw] = await Promise.all([
-        useAdminApi.getEnvironmentalChangesForTeam(initiative.teamId, orgId),
-        useAdminApi.getEnvLinks(initiative.initiativeId, orgId),
+        useAdminApi.getEnvironmentalChangesForTeam(initiative.teamId, orgId, organization.userId!),
+        useAdminApi.getEnvLinks(initiative.initiativeId, orgId, organization.userId!),
       ]);
       const changes: EnvChange[] = (Array.isArray(changesRaw) ? changesRaw : changesRaw?.items ?? [])
         .map((c: any) => ({
@@ -273,7 +275,7 @@ export default function StrategyDashboardPage() {
       .filter(c => draftLinkedIds.has(c.id))
       .map(c => ({ id: c.id, name: c.name }));
     try {
-      await useAdminApi.updateEnvLinks(selectedInitiative.initiativeId, links, orgId);
+      await useAdminApi.updateEnvLinks(selectedInitiative.initiativeId, links, orgId, organization.userId!);
       setLinkedEnvIds(new Set(draftLinkedIds)); // commit draft to real state
       setEnvLinksModalOpen(false);
       toast.success(`${links.length} environmental link${links.length !== 1 ? 's' : ''} saved`);
@@ -297,7 +299,7 @@ export default function StrategyDashboardPage() {
     setILinksLoading(true);
     const orgId = initiative.organizationId || organizationId;
     try {
-      const raw = await useAdminApi.getInitiativeLinks(initiative.initiativeId, orgId);
+      const raw = await useAdminApi.getInitiativeLinks(initiative.initiativeId, orgId, organization.userId!);
       const ids: string[] = (Array.isArray(raw) ? raw : []).map((l: any) => l.id?.toString() ?? l.id);
       setLinkedInitiativeIds(new Set(ids));
     } catch { /* non-fatal */ }
@@ -321,7 +323,7 @@ export default function StrategyDashboardPage() {
       .filter(i => draftLinkedInitiativeIds.has(i.initiativeId) && i.initiativeId !== selectedInitiative.initiativeId)
       .map(i => ({ id: i.initiativeId, name: i.initiativeName }));
     try {
-      await useAdminApi.updateInitiativeLinks(selectedInitiative.initiativeId, links, orgId);
+      await useAdminApi.updateInitiativeLinks(selectedInitiative.initiativeId, links, orgId, organization.userId!);
       setLinkedInitiativeIds(new Set(draftLinkedInitiativeIds));
       setILinksModalOpen(false);
       toast.success(`${links.length} initiative link${links.length !== 1 ? 's' : ''} saved`);
@@ -373,6 +375,7 @@ export default function StrategyDashboardPage() {
         { initiativeId: detail.initiativeId, step, itemId, content, status: 'ACTIVE' },
         userId, sid, detail.organizationId || organizationId
       );
+      toast.success(persisted ? 'Item updated' : 'Item added');
       if (serverSnapshot.current) {
         const idx = serverSnapshot.current.items[step].findIndex(i => i.itemId === itemId);
         if (idx >= 0) {
@@ -416,6 +419,7 @@ export default function StrategyDashboardPage() {
         if (!d) return d;
         return { ...d, items: { ...d.items, [step]: d.items[step].filter(i => i.itemId !== itemId) } };
       });
+      toast.success('Item deleted');
       return;
     }
     setDetail(d => {
@@ -432,6 +436,7 @@ export default function StrategyDashboardPage() {
       if (serverSnapshot.current) {
         serverSnapshot.current.items[step] = serverSnapshot.current.items[step].filter(i => i.itemId !== itemId);
       }
+      toast.success('Item deleted');
     } catch (e: any) {
       toast.error(itemErrorMsg(e));
       if (target) {
@@ -488,7 +493,7 @@ export default function StrategyDashboardPage() {
     try {
       await useAdminApi.createStrategyDraft(
         { teamId, organizationId, title: newStrategy.title, timeframe: newStrategy.timeframe },
-        organization.adminId || '0000', organization.sid!
+        organization.userId || '0000', organization.sid!
       );
       toast.success(`Strategy "${newStrategy.title}" created`);
       setStrategyModalOpen(false);
@@ -509,8 +514,9 @@ export default function StrategyDashboardPage() {
       await useAdminApi.changeInitiative(
         initiative.initiativeId,
         { initiativeId: initiative.initiativeId, initiativeName: trimmed, organizationId: initiative.organizationId, status: 'ACTIVE' },
-        userId, sid
+        organization.userId!, organization.sid!
       );
+      toast.success('Initiative renamed');
     } catch (e: any) {
       setInitiatives(list => list.map(i => i.initiativeId === initiative.initiativeId ? { ...i, initiativeName: prev } : i));
       toast.error(`Could not rename initiative: ${e.message}`);
@@ -526,8 +532,9 @@ export default function StrategyDashboardPage() {
       await useAdminApi.changeInitiative(
         initiative.initiativeId,
         { initiativeId: initiative.initiativeId, initiativeName: initiative.initiativeName, organizationId: initiative.organizationId, status: 'DELETED' },
-        userId, sid
+        organization.userId!, organization.sid!
       );
+      toast.success('Initiative deleted');
     } catch (e: any) {
       setInitiatives(snapshot);
       toast.error(`Could not delete initiative: ${e.message}`);
@@ -550,7 +557,7 @@ export default function StrategyDashboardPage() {
           strategyId: selectedStrategy.strategyId,
           teamId: selectedStrategy.teamId,
         },
-        organization.adminId || '0000', organization.sid!
+        organization.userId || '0000', organization.sid!
       );
       toast.success(`Initiative "${newInitiative.name}" created`);
       setInitiativeModalOpen(false);
@@ -664,8 +671,8 @@ export default function StrategyDashboardPage() {
                       <div
                         key={s.strategyId}
                         className={`rounded-xl border transition-all overflow-hidden ${isExpanded
-                            ? 'border-primary/30 bg-card shadow-md'
-                            : 'border-border bg-card hover:border-primary/20 hover:shadow-sm'
+                          ? 'border-primary/30 bg-card shadow-md'
+                          : 'border-border bg-card hover:border-primary/20 hover:shadow-sm'
                           }`}
                       >
                         {/* Strategy header row */}

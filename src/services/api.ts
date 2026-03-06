@@ -1,12 +1,15 @@
 const BASE = 'http://localhost:8080';
 export const GENESIS_ADMIN_ID = '00000000-0000-0000-0000-000000000001';
 
-function hdrs(sid?: string) {
-  return {
+function hdrs(sid?: string, userId?: string, orgId?: string) {
+  const h: any = {
     'Content-Type': 'application/json',
     'X-Session-Id': sid || crypto.randomUUID(),
     'X-Correlation-Id': crypto.randomUUID(),
   };
+  if (userId) h['x-user-id'] = userId;
+  if (orgId) h['organizationId'] = orgId;
+  return h;
 }
 
 async function api(url: string, opts: RequestInit & { method?: string } = {}) {
@@ -41,7 +44,7 @@ export const useAdminApi = {
   defineOrganization(payload: { organizationId: string, personId: string, username: string, organizationName: string }, sid: string, userId: string) {
     return api('/defineorganization', {
       method: 'POST',
-      headers: { ...hdrs(sid), 'x-user-id': userId },
+      headers: hdrs(sid, userId, payload.organizationId),
       body: JSON.stringify(payload)
     });
   },
@@ -54,53 +57,77 @@ export const useAdminApi = {
     return api(`/account/${personId}`);
   },
 
-  createTeam(payload: any, sid: string) {
-    return api('/createteam', { method: 'POST', headers: hdrs(sid), body: JSON.stringify(payload) });
-  },
-  getTeamListByOrg(organizationId: string) {
-    return api('/teamlist', {
-      headers: { ...hdrs(), 'organizationId': organizationId },
+  createTeam(payload: any, sid: string, userId: string) {
+    return api('/createteam', {
+      method: 'POST',
+      headers: hdrs(sid, userId, payload.organizationId),
+      body: JSON.stringify(payload)
     });
   },
-  updateTeam(teamId: string, payload: { teamId: string; organizationId: string; name: string; purpose: string; context: string; level: number }, sid: string) {
-    return api(`/updateteam/${teamId}`, { method: 'POST', headers: hdrs(sid), body: JSON.stringify(payload) });
+  getTeamListByOrg(organizationId: string, userId?: string) {
+    return api('/teamlist', {
+      headers: hdrs(undefined, userId, organizationId),
+    });
   },
-  deleteTeam(teamId: string, payload: { teamId: string; organizationId: string }, sid: string) {
-    return api(`/deleteteam/${teamId}`, { method: 'POST', headers: hdrs(sid), body: JSON.stringify(payload) });
+  updateTeam(teamId: string, payload: { teamId: string; organizationId: string; name: string; purpose: string; context: string; level: number }, sid: string, userId: string) {
+    return api(`/updateteam/${teamId}`, {
+      method: 'POST',
+      headers: hdrs(sid, userId, payload.organizationId),
+      body: JSON.stringify(payload)
+    });
+  },
+  deleteTeam(teamId: string, payload: { teamId: string; organizationId: string }, sid: string, userId: string) {
+    return api(`/deleteteam/${teamId}`, {
+      method: 'POST',
+      headers: hdrs(sid, userId, payload.organizationId),
+      body: JSON.stringify(payload)
+    });
   },
 
   // Environmental Changes API
-  getEnvironmentalChangesForTeam(teamId: string, organizationId: string) {
+  getEnvironmentalChangesForTeam(teamId: string, organizationId: string, userId?: string) {
     return api(`/environmentalchanges/team/${teamId}`, {
-      headers: { ...hdrs(), 'organizationId': organizationId },
+      headers: hdrs(undefined, userId, organizationId),
     });
   },
-  getEnvironmentalChangeDetails(environmentalChangeId: string, organizationId: string) {
+  getEnvironmentalChangeDetails(environmentalChangeId: string, organizationId: string, userId?: string) {
     return api(`/environmentalchanges/${environmentalChangeId}`, {
-      headers: { ...hdrs(), 'organizationId': organizationId },
+      headers: hdrs(undefined, userId, organizationId),
     });
   },
-  detectEnvironmentalChange(payload: any, sid: string) {
-    return api('/detectenvironmentalchange', { method: 'POST', headers: hdrs(sid), body: JSON.stringify(payload) });
+  detectEnvironmentalChange(payload: any, sid: string, userId: string) {
+    return api('/detectenvironmentalchange', {
+      method: 'POST',
+      headers: hdrs(sid, userId, payload.organizationId),
+      body: JSON.stringify(payload)
+    });
   },
-  updateEnvironmentalChange(id: string, payload: any, sid: string) {
-    return api(`/updateenvironmentalchange/${id}`, { method: 'POST', headers: hdrs(sid), body: JSON.stringify(payload) });
+  updateEnvironmentalChange(id: string, payload: any, sid: string, userId: string) {
+    return api(`/updateenvironmentalchange/${id}`, {
+      method: 'POST',
+      headers: hdrs(sid, userId, payload.organizationId),
+      body: JSON.stringify(payload)
+    });
   },
-  deleteEnvironmentalChange(id: string, payload: any, sid: string) {
-    return api(`/deleteenvironmentalchange/${id}`, { method: 'POST', headers: hdrs(sid), body: JSON.stringify(payload) });
+  deleteEnvironmentalChange(id: string, payload: any, sid: string, userId: string) {
+    return api(`/deleteenvironmentalchange/${id}`, {
+      method: 'POST',
+      headers: hdrs(sid, userId, payload.organizationId),
+      body: JSON.stringify(payload)
+    });
   },
 
   // Strategy API
   createStrategyDraft(payload: { teamId: string; organizationId: string; title: string; timeframe: string }, userId: string, sid: string) {
     return api('/api/v1/strategies/draft', {
       method: 'POST',
-      headers: { ...hdrs(sid), 'x-user-id': userId },
+      headers: hdrs(sid, userId, payload.organizationId),
       body: JSON.stringify(payload)
     });
   },
-  getStrategiesByTeam(organizationId: string, _teamId?: string) {
+  getStrategiesByTeam(organizationId: string, userId?: string, _teamId?: string) {
     return api(`/strategies`, {
-      headers: { ...hdrs(), 'organizationId': organizationId },
+      headers: hdrs(undefined, userId, organizationId),
     });
   },
 
@@ -108,7 +135,7 @@ export const useAdminApi = {
   createInitiative(initiativeId: string, payload: { initiativeId: string; initiativeName: string; organizationId: string; strategyId: string; teamId: string }, userId: string, sid: string) {
     return api(`/createinitiative/${initiativeId}`, {
       method: 'POST',
-      headers: { ...hdrs(sid), 'x-user-id': userId },
+      headers: hdrs(sid, userId, payload.organizationId),
       body: JSON.stringify(payload)
     });
   },
@@ -120,69 +147,60 @@ export const useAdminApi = {
   ) {
     return api(`/changeinitiative/${initiativeId}`, {
       method: 'POST',
-      headers: { ...hdrs(sid), 'x-user-id': userId },
+      headers: hdrs(sid, userId, payload.organizationId),
       body: JSON.stringify(payload)
     });
   },
-  getInitiativesByStrategy(strategyId: string, teamId: string, organizationId: string) {
-    // 1. Remove organizationId from the URL string
-    // 2. Add it to the headers object
+  getInitiativesByStrategy(strategyId: string, teamId: string, organizationId: string, userId?: string) {
     return api(`/initiativelist/by-strategy?strategyId=${strategyId}&teamId=${teamId}`, {
       method: 'GET',
-      headers: {
-        ...hdrs(), // Assuming hdrs() returns content-type, etc.
-        'organizationId': organizationId
-      }
+      headers: hdrs(undefined, userId, organizationId)
     });
   },
   /** GET /initiativelist/{id} → { data: InitiativesReadModelEntity } */
-  getInitiativeById(initiativeId: string, organizationId: string) {
+  getInitiativeById(initiativeId: string, organizationId: string, userId?: string) {
     return api(`/initiativelist/${initiativeId}`, {
       method: 'GET',
-      headers: {
-        ...hdrs(),
-        'organizationId': organizationId
-      }
+      headers: hdrs(undefined, userId, organizationId)
     });
   },
   /** GET /env-links/{initiativeId} — returns [{id, name}] */
-  getEnvLinks(initiativeId: string, organizationId: string) {
+  getEnvLinks(initiativeId: string, organizationId: string, userId?: string) {
     return api(`/env-links/${initiativeId}`, {
       method: 'GET',
-      headers: { ...hdrs(), 'organizationId': organizationId },
+      headers: hdrs(undefined, userId, organizationId),
     });
   },
   /** POST /env-links/{initiativeId} — replaces the full linked list */
-  updateEnvLinks(initiativeId: string, links: { id: string; name: string }[], organizationId: string) {
+  updateEnvLinks(initiativeId: string, links: { id: string; name: string }[], organizationId: string, userId?: string) {
     return api(`/env-links/${initiativeId}`, {
       method: 'POST',
-      headers: { ...hdrs(), 'organizationId': organizationId },
+      headers: hdrs(undefined, userId, organizationId),
       body: JSON.stringify(links),
     });
   },
   /** GET /initiative-links/{initiativeId} — returns [{id, name}] */
-  getInitiativeLinks(initiativeId: string, organizationId: string) {
+  getInitiativeLinks(initiativeId: string, organizationId: string, userId?: string) {
     return api(`/initiative-links/${initiativeId}`, {
       method: 'GET',
-      headers: { ...hdrs(), 'organizationId': organizationId },
+      headers: hdrs(undefined, userId, organizationId),
     });
   },
   /** POST /initiative-links/{initiativeId} — replaces the full linked list */
-  updateInitiativeLinks(initiativeId: string, links: { id: string; name: string }[], organizationId: string) {
+  updateInitiativeLinks(initiativeId: string, links: { id: string; name: string }[], organizationId: string, userId?: string) {
     return api(`/initiative-links/${initiativeId}`, {
       method: 'POST',
-      headers: { ...hdrs(), 'organizationId': organizationId },
+      headers: hdrs(undefined, userId, organizationId),
       body: JSON.stringify(links),
     });
   },
-  /** POST /changeinitiativeitem/{initiativeId} */
   /** POST /changeinitiativeitem/{initiativeId} */
   changeInitiativeItem(
     initiativeId: string,
     payload: { initiativeId: string; step: string; itemId: string; content: string; status: string },
     userId: string,
     sid: string,
-    organizationId: string // <--- This is the 5th argument
+    organizationId: string
   ) {
     // CRITICAL: Prevent sending "undefined" string to backend
     if (!organizationId) {
@@ -191,18 +209,18 @@ export const useAdminApi = {
 
     return api(`/changeinitiativeitem/${initiativeId}`, {
       method: 'POST',
-      headers: {
-        ...hdrs(sid),
-        'x-user-id': userId,
-        'organizationId': organizationId // This sends the header Spring is looking for
-      },
+      headers: hdrs(sid, userId, organizationId),
       body: JSON.stringify(payload)
     });
   },
 
   // Legacy/Compatibility (Can be removed later if not used)
   getRadarList() { return api('/radarlist'); },
-  createRadar(environmentalChangeId: string, teamId: string, orgId: string, sid: string) {
-    return api('/createradar', { method: 'POST', headers: hdrs(sid), body: JSON.stringify({ environmentalChangeId, teamId, organizationId: orgId }) });
+  createRadar(environmentalChangeId: string, teamId: string, orgId: string, sid: string, userId?: string) {
+    return api('/createradar', {
+      method: 'POST',
+      headers: hdrs(sid, userId, orgId),
+      body: JSON.stringify({ environmentalChangeId, teamId, organizationId: orgId })
+    });
   },
 };

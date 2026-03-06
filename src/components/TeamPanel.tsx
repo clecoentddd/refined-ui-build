@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, List, Target, Plus, Radio, Loader2, Pencil, Trash2 } from 'lucide-react';
+import { ChevronRight, List, Target, Plus, Radio, Loader2, Pencil, Trash2, TrendingUp } from 'lucide-react';
 import type { Team, RadarElement } from '@/context/AppContext';
 import { useAppState } from '@/context/AppContext';
 import { useAdminApi } from '@/services/api';
@@ -36,6 +36,12 @@ export default function TeamPanel({ team, onRefresh }: TeamPanelProps) {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
+  useEffect(() => {
+    if (organization.orgId) {
+      loadRadar();
+    }
+  }, [organization.orgId, team.teamId]);
+
   const toggle = async () => {
     const next = !open;
     setOpen(next);
@@ -45,7 +51,7 @@ export default function TeamPanel({ team, onRefresh }: TeamPanelProps) {
   const loadRadar = async () => {
     setLoading(true);
     try {
-      const r = await useAdminApi.getEnvironmentalChangesForTeam(team.teamId, organization.orgId!);
+      const r = await useAdminApi.getEnvironmentalChangesForTeam(team.teamId, organization.orgId!, organization.userId!);
       const els = r || [];
       setElements(els);
       setElementCount(els.length);
@@ -60,7 +66,7 @@ export default function TeamPanel({ team, onRefresh }: TeamPanelProps) {
         environmentalChangeId: eid,
         teamId: team.teamId,
         organizationId: organization.orgId
-      }, organization.sid!);
+      }, organization.sid!, organization.userId!);
       toast.success('Element deleted');
       setTimeout(loadRadar, 1000);
     } catch (e: any) { toast.error(`Error: ${e.message}`); }
@@ -83,7 +89,7 @@ export default function TeamPanel({ team, onRefresh }: TeamPanelProps) {
         purpose: editTeam.purpose,
         context: editTeam.context,
         level: parseInt(editTeam.level) || 1,
-      }, organization.sid!);
+      }, organization.sid!, organization.userId!);
       toast.success(`Team "${editTeam.name}" updated`);
       setEditOpen(false);
       setTimeout(onRefresh, 1500);
@@ -99,7 +105,7 @@ export default function TeamPanel({ team, onRefresh }: TeamPanelProps) {
       await useAdminApi.deleteTeam(team.teamId, {
         teamId: team.teamId,
         organizationId: team.organizationId,
-      }, organization.sid!);
+      }, organization.sid!, organization.userId!);
       toast.success(`Team "${team.name}" deleted`);
       setTimeout(onRefresh, 1500);
     } catch (e: any) { toast.error(`Error: ${e.message}`); }
@@ -119,15 +125,19 @@ export default function TeamPanel({ team, onRefresh }: TeamPanelProps) {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Pill variant={elementCount !== null && elementCount > 0 ? 'primary' : 'default'}>
-            {elementCount !== null ? `${elementCount} element${elementCount !== 1 ? 's' : ''}` : 'loading...'}
-          </Pill>
+          <button
+            onClick={(e) => { e.stopPropagation(); toggle(); }}
+            title="Toggle Radar"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-muted-foreground hover:text-primary hover:border-primary/20 hover:bg-primary/5 text-[11px] font-medium transition-all"
+          >
+            <Radio className="w-3.5 h-3.5" /> Radar
+          </button>
           <button
             onClick={(e) => { e.stopPropagation(); navigate(`/dashboard/strategy?teamId=${team.teamId}&organizationId=${team.organizationId}&teamName=${encodeURIComponent(team.name)}`); }}
             title="Strategy dashboard"
             className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-border text-muted-foreground hover:text-primary hover:border-primary/20 hover:bg-primary/5 text-[11px] font-medium transition-all"
           >
-            <Target className="w-3.5 h-3.5" /> Strategy
+            <TrendingUp className="w-3.5 h-3.5" /> Strategy
           </button>
           <button
             onClick={openEdit}

@@ -14,6 +14,7 @@ export interface OrganizationSession {
   role: string | null;
   adminId: string | null;
   username: string | null;
+  userId: string | null;
   teamId: string | null;
 }
 
@@ -64,7 +65,7 @@ interface AppState {
 const ORG_SESSION_KEY = 'stradar:org';
 
 const defaultSaas: SaasSession = { sid: null, adminId: null, email: null };
-const defaultOrganization: OrganizationSession = { sid: null, email: null, orgId: null, orgName: null, role: null, adminId: null, username: null, teamId: null };
+const defaultOrganization: OrganizationSession = { sid: null, email: null, orgId: null, orgName: null, role: null, adminId: null, username: null, userId: null, teamId: null };
 
 function loadOrgSession(): OrganizationSession {
   try {

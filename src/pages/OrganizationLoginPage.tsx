@@ -29,6 +29,7 @@ export default function OrganizationLoginPage() {
         role: account.role,
         adminId: account.personId,
         username: account.username,
+        userId: account.personId,
         teamId: account.teamId
       });
       navigate('/dashboard/organization');
