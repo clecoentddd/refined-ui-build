@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 import {
-  Target, Plus, ChevronRight, ChevronDown, Loader2, Flag, ArrowLeft,
+  TrendingUp, Plus, ChevronRight, ChevronDown, Loader2, Flag, ArrowLeft,
   Save, Clock, LayoutGrid, Pencil, Trash2, Check, X, Link, Search
 } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -573,7 +573,7 @@ export default function StrategyDashboardPage() {
       <div className="min-h-screen flex flex-col bg-background">
         <Navbar variant="organization" />
         <div className="flex-1 flex items-center justify-center">
-          <EmptyState icon={<Target className="w-8 h-8 opacity-20" />} message="No team selected. Open Strategy from within a team panel." />
+          <EmptyState icon={<TrendingUp className="w-8 h-8 opacity-20" />} message="No team selected. Open Strategy from within a team panel." />
         </div>
       </div>
     );
@@ -659,7 +659,7 @@ export default function StrategyDashboardPage() {
               {strategiesLoading ? (
                 <EmptyState icon={<Loader2 className="w-6 h-6 animate-spin opacity-30" />} message="Loading strategies…" />
               ) : strategies.length === 0 ? (
-                <EmptyState icon={<Target className="w-8 h-8 opacity-30" />} message="No strategies yet. Create one to get started." />
+                <EmptyState icon={<TrendingUp className="w-8 h-8 opacity-30" />} message="No strategies yet. Create one to get started." />
               ) : (
                 <div className="space-y-3">
                   {strategies.map(s => {
@@ -682,7 +682,7 @@ export default function StrategyDashboardPage() {
                         >
                           <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${isExpanded ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
                             }`}>
-                            <Target className="w-4 h-4" />
+                            <TrendingUp className="w-4 h-4" />
                           </div>
 
                           <div className="flex-1 min-w-0">

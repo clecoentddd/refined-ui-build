@@ -1,4 +1,4 @@
-import { ChevronRight, Target, Flag, LayoutGrid } from 'lucide-react';
+import { ChevronRight, TrendingUp, Flag, LayoutGrid } from 'lucide-react';
 
 interface BreadcrumbProps {
   teamName: string;
@@ -16,14 +16,13 @@ export default function StrategyBreadcrumb({
   onBackToInitiatives,
 }: BreadcrumbProps) {
   return (
-    <nav className="flex items-center gap-1 text-sm text-muted-foreground">
+    <nav className="flex items-center gap-1.5 text-sm text-muted-foreground">
       <button
         onClick={onBackToStrategies}
-        className={`flex items-center gap-1.5 px-2 py-1 rounded-md transition-colors ${
-          !strategyTitle ? 'text-foreground font-semibold' : 'hover:text-foreground hover:bg-muted/40'
-        }`}
+        className={`flex items-center gap-1.5 px-2 py-1 rounded-md transition-colors ${!strategyTitle ? 'text-foreground font-semibold' : 'hover:text-foreground hover:bg-muted/40'
+          }`}
       >
-        <Target className="w-3.5 h-3.5" />
+        <TrendingUp className="w-3.5 h-3.5" />
         Strategies
       </button>
 
@@ -32,9 +31,8 @@ export default function StrategyBreadcrumb({
           <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40" />
           <button
             onClick={onBackToInitiatives}
-            className={`flex items-center gap-1.5 px-2 py-1 rounded-md transition-colors truncate max-w-[200px] ${
-              !initiativeName ? 'text-foreground font-semibold' : 'hover:text-foreground hover:bg-muted/40'
-            }`}
+            className={`flex items-center gap-1.5 px-2 py-1 rounded-md transition-colors truncate max-w-[200px] ${!initiativeName ? 'text-foreground font-semibold' : 'hover:text-foreground hover:bg-muted/40'
+              }`}
           >
             <Flag className="w-3.5 h-3.5 flex-shrink-0" />
             <span className="truncate">{strategyTitle}</span>

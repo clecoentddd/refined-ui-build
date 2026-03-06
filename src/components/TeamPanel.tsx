@@ -130,7 +130,7 @@ export default function TeamPanel({ team, onRefresh }: TeamPanelProps) {
             title="Toggle Radar"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-muted-foreground hover:text-primary hover:border-primary/20 hover:bg-primary/5 text-[11px] font-medium transition-all"
           >
-            <Radio className="w-3.5 h-3.5" /> Radar
+            <Radar className="w-3.5 h-3.5" /> Radar
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); navigate(`/dashboard/strategy?teamId=${team.teamId}&organizationId=${team.organizationId}&teamName=${encodeURIComponent(team.name)}`); }}
