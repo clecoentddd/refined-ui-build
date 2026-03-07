@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
-import { Users, Plus } from 'lucide-react';
+import { Users, Plus, Crown, Briefcase, Building2, Network, ChevronDown } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import PageHeader from '@/components/PageHeader';
 import EmptyState from '@/components/EmptyState';
@@ -9,6 +9,64 @@ import TeamPanel from '@/components/TeamPanel';
 import { FormField, FormInput } from '@/components/FormElements';
 import { useAppState } from '@/context/AppContext';
 import { useAdminApi } from '@/services/api';
+import type { Team } from '@/context/AppContext';
+
+const LEVEL_META: Record<number, { label: string; icon: React.ReactNode; accent: string }> = {
+  0: { label: 'Board of Directors', icon: <Crown className="w-4 h-4" />, accent: 'from-warning/20 to-warning/5 border-warning/20 text-warning' },
+  1: { label: 'CEO', icon: <Briefcase className="w-4 h-4" />, accent: 'from-primary/20 to-primary/5 border-primary/20 text-primary' },
+  2: { label: 'CxO / VP', icon: <Building2 className="w-4 h-4" />, accent: 'from-success/20 to-success/5 border-success/20 text-success' },
+  3: { label: 'Directors', icon: <Network className="w-4 h-4" />, accent: 'from-destructive/15 to-destructive/5 border-destructive/15 text-destructive' },
+};
+
+function getLevelMeta(level: number) {
+  if (LEVEL_META[level]) return LEVEL_META[level];
+  return { label: `Level ${level}`, icon: <Users className="w-4 h-4" />, accent: 'from-muted to-muted/50 border-border text-muted-foreground' };
+}
+
+interface LevelGroupProps {
+  level: number;
+  teams: Team[];
+  onRefresh: () => void;
+  isFirst: boolean;
+}
+
+function LevelGroup({ level, teams, onRefresh, isFirst }: LevelGroupProps) {
+  const meta = getLevelMeta(level);
+  const [collapsed, setCollapsed] = useState(false);
+
+  return (
+    <div className="relative">
+      {/* Vertical connector line */}
+      {!isFirst && (
+        <div className="absolute left-1/2 -top-8 w-px h-8 bg-border" />
+      )}
+
+      {/* Level header pill */}
+      <div className="flex justify-center mb-4">
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border bg-gradient-to-r font-semibold text-xs tracking-wide uppercase transition-all hover:shadow-md ${meta.accent}`}
+        >
+          {meta.icon}
+          {meta.label}
+          <span className="ml-1 bg-background/60 rounded-full px-2 py-0.5 text-[10px] font-bold tabular-nums">
+            {teams.length}
+          </span>
+          <ChevronDown className={`w-3 h-3 transition-transform ${collapsed ? '-rotate-90' : ''}`} />
+        </button>
+      </div>
+
+      {/* Teams grid — adapts to count */}
+      {!collapsed && (
+        <div className={`grid gap-3 ${teams.length === 1 ? 'max-w-2xl mx-auto' : teams.length === 2 ? 'grid-cols-2 max-w-4xl mx-auto' : 'grid-cols-1 lg:grid-cols-2 xl:grid-cols-3'}`}>
+          {teams.map(team => (
+            <TeamPanel key={team.teamId} team={team} onRefresh={onRefresh} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function OrganizationDashboardPage() {
   const { organization, teams, setTeams } = useAppState();
@@ -44,6 +102,19 @@ export default function OrganizationDashboardPage() {
     } catch (e: any) { toast.error(`Error: ${e.message}`); }
   };
 
+  // Group teams by level, sorted ascending
+  const levelGroups = useMemo(() => {
+    const grouped: Record<number, Team[]> = {};
+    teams.forEach(t => {
+      const lvl = t.level ?? 1;
+      if (!grouped[lvl]) grouped[lvl] = [];
+      grouped[lvl].push(t);
+    });
+    return Object.entries(grouped)
+      .map(([lvl, t]) => ({ level: Number(lvl), teams: t }))
+      .sort((a, b) => a.level - b.level);
+  }, [teams]);
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar variant="organization" />
@@ -64,8 +135,8 @@ export default function OrganizationDashboardPage() {
 
         <main className="p-7 overflow-y-auto">
           <PageHeader
-            title="Teams & Radar"
-            subtitle="Click a team to view and manage its radar elements"
+            title="Organization Hierarchy"
+            subtitle="Teams organized by leadership level — from board to operational"
             actions={
               <button onClick={() => setTeamModalOpen(true)} className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground rounded-lg px-5 py-2 font-semibold text-sm hover:opacity-90 transition-all">
                 <Plus className="w-4 h-4" /> New Team
@@ -76,9 +147,15 @@ export default function OrganizationDashboardPage() {
           {teams.length === 0 ? (
             <EmptyState icon={<Users className="w-8 h-8 opacity-30" />} message="No teams yet. Create the first one." />
           ) : (
-            <div className="space-y-3">
-              {teams.map(team => (
-                <TeamPanel key={team.teamId} team={team} onRefresh={() => { loadTeams(); }} />
+            <div className="space-y-8 py-4">
+              {levelGroups.map((group, idx) => (
+                <LevelGroup
+                  key={group.level}
+                  level={group.level}
+                  teams={group.teams}
+                  onRefresh={loadTeams}
+                  isFirst={idx === 0}
+                />
               ))}
             </div>
           )}
@@ -90,7 +167,7 @@ export default function OrganizationDashboardPage() {
         <FormField label="Purpose"><FormInput value={newTeam.purpose} onChange={e => setNewTeam(p => ({ ...p, purpose: e.target.value }))} placeholder="Drive strategic initiatives" /></FormField>
         <div className="grid grid-cols-2 gap-3">
           <FormField label="Context"><FormInput value={newTeam.context} onChange={e => setNewTeam(p => ({ ...p, context: e.target.value }))} placeholder="Executive" /></FormField>
-          <FormField label="Level"><FormInput type="number" value={newTeam.level} onChange={e => setNewTeam(p => ({ ...p, level: e.target.value }))} min={1} max={10} /></FormField>
+          <FormField label="Level"><FormInput type="number" value={newTeam.level} onChange={e => setNewTeam(p => ({ ...p, level: e.target.value }))} min={0} max={10} /></FormField>
         </div>
         <div className="flex gap-2.5 mt-5">
           <button onClick={() => setTeamModalOpen(false)} className="flex-1 border border-border bg-background text-muted-foreground rounded-lg py-2.5 font-semibold text-sm hover:text-foreground transition-all">Cancel</button>
