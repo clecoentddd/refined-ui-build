@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
-import { Users, Plus } from 'lucide-react';
+import { Users, Plus, ChevronDown } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
 import Navbar from '@/components/Navbar';
 import PageHeader from '@/components/PageHeader';
 import EmptyState from '@/components/EmptyState';
@@ -9,6 +10,57 @@ import TeamPanel from '@/components/TeamPanel';
 import { FormField, FormInput } from '@/components/FormElements';
 import { useAppState } from '@/context/AppContext';
 import { useAdminApi } from '@/services/api';
+import type { Team } from '@/context/AppContext';
+
+interface LevelGroupProps {
+  level: number;
+  teams: Team[];
+  onRefresh: () => void;
+  isFirst: boolean;
+}
+
+function LevelGroup({ level, teams, onRefresh, isFirst }: LevelGroupProps) {
+  const [collapsed, setCollapsed] = useState(false);
+
+  return (
+    <div className="relative">
+      {!isFirst && (
+        <div className="absolute left-1/2 -top-4 w-px h-4 bg-border" />
+      )}
+
+      {/* Level separator */}
+      <div className="flex items-center gap-3 mb-3">
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="inline-flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-widest hover:text-foreground transition-colors"
+        >
+          <ChevronDown className={`w-3 h-3 transition-transform ${collapsed ? '-rotate-90' : ''}`} />
+          Level {level}
+        </button>
+        <div className="flex-1 h-px bg-border" />
+        <span className="text-[11px] text-muted-foreground tabular-nums">{teams.length} team{teams.length !== 1 ? 's' : ''}</span>
+      </div>
+
+      <AnimatePresence>
+        {!collapsed && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="overflow-hidden"
+          >
+            <div className={`grid gap-3 ${teams.length === 1 ? 'max-w-3xl' : teams.length === 2 ? 'grid-cols-2' : 'grid-cols-1 lg:grid-cols-2 xl:grid-cols-3'}`}>
+              {teams.map(team => (
+                <TeamPanel key={team.teamId} team={team} onRefresh={onRefresh} />
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 export default function OrganizationDashboardPage() {
   const { organization, teams, setTeams } = useAppState();
@@ -44,6 +96,18 @@ export default function OrganizationDashboardPage() {
     } catch (e: any) { toast.error(`Error: ${e.message}`); }
   };
 
+  const levelGroups = useMemo(() => {
+    const grouped: Record<number, Team[]> = {};
+    teams.forEach(t => {
+      const lvl = t.level ?? 1;
+      if (!grouped[lvl]) grouped[lvl] = [];
+      grouped[lvl].push(t);
+    });
+    return Object.entries(grouped)
+      .map(([lvl, t]) => ({ level: Number(lvl), teams: t }))
+      .sort((a, b) => a.level - b.level);
+  }, [teams]);
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar variant="organization" />
@@ -64,8 +128,8 @@ export default function OrganizationDashboardPage() {
 
         <main className="p-7 overflow-y-auto">
           <PageHeader
-            title="Teams & Radar"
-            subtitle="Click a team to view and manage its radar elements"
+            title="Organization Hierarchy"
+            subtitle="Teams organized by level"
             actions={
               <button onClick={() => setTeamModalOpen(true)} className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground rounded-lg px-5 py-2 font-semibold text-sm hover:opacity-90 transition-all">
                 <Plus className="w-4 h-4" /> New Team
@@ -76,9 +140,9 @@ export default function OrganizationDashboardPage() {
           {teams.length === 0 ? (
             <EmptyState icon={<Users className="w-8 h-8 opacity-30" />} message="No teams yet. Create the first one." />
           ) : (
-            <div className="space-y-3">
-              {teams.map(team => (
-                <TeamPanel key={team.teamId} team={team} onRefresh={() => { loadTeams(); }} />
+            <div className="space-y-8 py-2">
+              {levelGroups.map((group, idx) => (
+                <LevelGroup key={group.level} level={group.level} teams={group.teams} onRefresh={loadTeams} isFirst={idx === 0} />
               ))}
             </div>
           )}
@@ -90,7 +154,7 @@ export default function OrganizationDashboardPage() {
         <FormField label="Purpose"><FormInput value={newTeam.purpose} onChange={e => setNewTeam(p => ({ ...p, purpose: e.target.value }))} placeholder="Drive strategic initiatives" /></FormField>
         <div className="grid grid-cols-2 gap-3">
           <FormField label="Context"><FormInput value={newTeam.context} onChange={e => setNewTeam(p => ({ ...p, context: e.target.value }))} placeholder="Executive" /></FormField>
-          <FormField label="Level"><FormInput type="number" value={newTeam.level} onChange={e => setNewTeam(p => ({ ...p, level: e.target.value }))} min={1} max={10} /></FormField>
+          <FormField label="Level"><FormInput type="number" value={newTeam.level} onChange={e => setNewTeam(p => ({ ...p, level: e.target.value }))} min={0} max={10} /></FormField>
         </div>
         <div className="flex gap-2.5 mt-5">
           <button onClick={() => setTeamModalOpen(false)} className="flex-1 border border-border bg-background text-muted-foreground rounded-lg py-2.5 font-semibold text-sm hover:text-foreground transition-all">Cancel</button>
