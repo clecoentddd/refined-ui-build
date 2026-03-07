@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
-import { Users, Plus, Crown, Briefcase, Building2, Network, ChevronDown } from 'lucide-react';
+import { Users, Plus, ChevronDown } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
 import Navbar from '@/components/Navbar';
 import PageHeader from '@/components/PageHeader';
 import EmptyState from '@/components/EmptyState';
@@ -11,18 +12,6 @@ import { useAppState } from '@/context/AppContext';
 import { useAdminApi } from '@/services/api';
 import type { Team } from '@/context/AppContext';
 
-const LEVEL_META: Record<number, { label: string; icon: React.ReactNode; accent: string }> = {
-  0: { label: 'Board of Directors', icon: <Crown className="w-4 h-4" />, accent: 'from-warning/20 to-warning/5 border-warning/20 text-warning' },
-  1: { label: 'CEO', icon: <Briefcase className="w-4 h-4" />, accent: 'from-primary/20 to-primary/5 border-primary/20 text-primary' },
-  2: { label: 'CxO / VP', icon: <Building2 className="w-4 h-4" />, accent: 'from-success/20 to-success/5 border-success/20 text-success' },
-  3: { label: 'Directors', icon: <Network className="w-4 h-4" />, accent: 'from-destructive/15 to-destructive/5 border-destructive/15 text-destructive' },
-};
-
-function getLevelMeta(level: number) {
-  if (LEVEL_META[level]) return LEVEL_META[level];
-  return { label: `Level ${level}`, icon: <Users className="w-4 h-4" />, accent: 'from-muted to-muted/50 border-border text-muted-foreground' };
-}
-
 interface LevelGroupProps {
   level: number;
   teams: Team[];
@@ -31,39 +20,44 @@ interface LevelGroupProps {
 }
 
 function LevelGroup({ level, teams, onRefresh, isFirst }: LevelGroupProps) {
-  const meta = getLevelMeta(level);
   const [collapsed, setCollapsed] = useState(false);
 
   return (
     <div className="relative">
-      {/* Vertical connector line */}
       {!isFirst && (
-        <div className="absolute left-1/2 -top-8 w-px h-8 bg-border" />
+        <div className="absolute left-1/2 -top-4 w-px h-4 bg-border" />
       )}
 
-      {/* Level header pill */}
-      <div className="flex justify-center mb-4">
+      {/* Level separator */}
+      <div className="flex items-center gap-3 mb-3">
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border bg-gradient-to-r font-semibold text-xs tracking-wide uppercase transition-all hover:shadow-md ${meta.accent}`}
+          className="inline-flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-widest hover:text-foreground transition-colors"
         >
-          {meta.icon}
-          {meta.label}
-          <span className="ml-1 bg-background/60 rounded-full px-2 py-0.5 text-[10px] font-bold tabular-nums">
-            {teams.length}
-          </span>
           <ChevronDown className={`w-3 h-3 transition-transform ${collapsed ? '-rotate-90' : ''}`} />
+          Level {level}
         </button>
+        <div className="flex-1 h-px bg-border" />
+        <span className="text-[11px] text-muted-foreground tabular-nums">{teams.length} team{teams.length !== 1 ? 's' : ''}</span>
       </div>
 
-      {/* Teams grid — adapts to count */}
-      {!collapsed && (
-        <div className={`grid gap-3 ${teams.length === 1 ? 'max-w-2xl mx-auto' : teams.length === 2 ? 'grid-cols-2 max-w-4xl mx-auto' : 'grid-cols-1 lg:grid-cols-2 xl:grid-cols-3'}`}>
-          {teams.map(team => (
-            <TeamPanel key={team.teamId} team={team} onRefresh={onRefresh} />
-          ))}
-        </div>
-      )}
+      <AnimatePresence>
+        {!collapsed && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="overflow-hidden"
+          >
+            <div className={`grid gap-3 ${teams.length === 1 ? 'max-w-3xl' : teams.length === 2 ? 'grid-cols-2' : 'grid-cols-1 lg:grid-cols-2 xl:grid-cols-3'}`}>
+              {teams.map(team => (
+                <TeamPanel key={team.teamId} team={team} onRefresh={onRefresh} />
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -102,7 +96,6 @@ export default function OrganizationDashboardPage() {
     } catch (e: any) { toast.error(`Error: ${e.message}`); }
   };
 
-  // Group teams by level, sorted ascending
   const levelGroups = useMemo(() => {
     const grouped: Record<number, Team[]> = {};
     teams.forEach(t => {
@@ -136,7 +129,7 @@ export default function OrganizationDashboardPage() {
         <main className="p-7 overflow-y-auto">
           <PageHeader
             title="Organization Hierarchy"
-            subtitle="Teams organized by leadership level — from board to operational"
+            subtitle="Teams organized by level"
             actions={
               <button onClick={() => setTeamModalOpen(true)} className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground rounded-lg px-5 py-2 font-semibold text-sm hover:opacity-90 transition-all">
                 <Plus className="w-4 h-4" /> New Team
@@ -147,15 +140,9 @@ export default function OrganizationDashboardPage() {
           {teams.length === 0 ? (
             <EmptyState icon={<Users className="w-8 h-8 opacity-30" />} message="No teams yet. Create the first one." />
           ) : (
-            <div className="space-y-8 py-4">
+            <div className="space-y-8 py-2">
               {levelGroups.map((group, idx) => (
-                <LevelGroup
-                  key={group.level}
-                  level={group.level}
-                  teams={group.teams}
-                  onRefresh={loadTeams}
-                  isFirst={idx === 0}
-                />
+                <LevelGroup key={group.level} level={group.level} teams={group.teams} onRefresh={loadTeams} isFirst={idx === 0} />
               ))}
             </div>
           )}
