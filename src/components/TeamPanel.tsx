@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, List, Target, Plus, Radio, Loader2, Pencil, Trash2, TrendingUp } from 'lucide-react';
+import { ChevronRight, List, Target, Plus, Radio, Loader2, Pencil, Trash2, TrendingUp, Radar } from 'lucide-react';
 import type { Team, RadarElement } from '@/context/AppContext';
 import { useAppState } from '@/context/AppContext';
 import { useAdminApi } from '@/services/api';
