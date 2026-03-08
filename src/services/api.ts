@@ -126,7 +126,7 @@ export const useAdminApi = {
     });
   },
   getStrategiesByTeam(organizationId: string, userId?: string, _teamId?: string) {
-    return api(`/strategies`, {
+    return api(`/strategies/team/${_teamId}`, {
       headers: hdrs(undefined, userId, organizationId),
     });
   },

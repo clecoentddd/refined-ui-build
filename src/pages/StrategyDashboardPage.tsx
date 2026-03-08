@@ -248,24 +248,45 @@ export default function StrategyDashboardPage() {
   const loadEnvLinks = useCallback(async (initiative: Initiative) => {
     setEnvLinksLoading(true);
     const orgId = initiative.organizationId || organizationId;
+
     try {
       const [changesRaw, linksRaw] = await Promise.all([
         useAdminApi.getEnvironmentalChangesForTeam(initiative.teamId, orgId, organization.userId!),
         useAdminApi.getEnvLinks(initiative.initiativeId, orgId, organization.userId!),
       ]);
-      const changes: EnvChange[] = (Array.isArray(changesRaw) ? changesRaw : changesRaw?.items ?? [])
-        .map((c: any) => ({
-          id: c.environmentalChangeId ?? c.id,
-          name: c.title ?? c.name ?? '',
-          category: c.category ?? '',
-          status: c.distance ?? c.status ?? '',
-        }));
-      const linked: string[] = (Array.isArray(linksRaw) ? linksRaw : []).map((l: any) => l.id);
+
+      console.log("[DEBUG] Raw Changes Response:", changesRaw);
+      console.log("[DEBUG] Raw Links Response:", linksRaw);
+
+      // FIX: The log shows the data is inside .elements
+      const rawList = Array.isArray(changesRaw)
+        ? changesRaw
+        : (changesRaw?.elements ?? changesRaw?.items ?? []);
+
+      console.log("[DEBUG] Extracted List:", rawList);
+
+      const changes: EnvChange[] = rawList.map((c: any) => ({
+        // Use environmentalChangeId as seen in your log
+        id: c.environmentalChangeId ?? c.id,
+        name: c.title ?? c.name ?? 'Untitled',
+        category: c.category ?? '',
+        status: c.distance ?? c.status ?? '',
+      }));
+
+      const linked: string[] = (Array.isArray(linksRaw) ? linksRaw : [])
+        .map((l: any) => (typeof l === 'string' ? l : (l.environmentalChangeId ?? l.id)));
+
+      console.log("[DEBUG] Final Processed Changes:", changes);
+      console.log("[DEBUG] Final Linked IDs:", linked);
+
       setEnvChanges(changes);
       setLinkedEnvIds(new Set(linked));
-    } catch { /* non-fatal — env links are optional */ }
-    setEnvLinksLoading(false);
-  }, [organizationId]);
+    } catch (e) {
+      console.error("Failed to sync environmental links:", e);
+    } finally {
+      setEnvLinksLoading(false);
+    }
+  }, [organizationId, organization.userId]);
 
   const handleSaveEnvLinks = async () => {
     if (!selectedInitiative) return;

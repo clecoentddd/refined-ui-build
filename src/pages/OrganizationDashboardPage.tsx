@@ -85,7 +85,7 @@ export default function OrganizationDashboardPage() {
       name: newTeam.name,
       purpose: newTeam.purpose,
       context: newTeam.context,
-      level: parseInt(newTeam.level) || 1,
+      level: isNaN(parseInt(newTeam.level)) ? 1 : parseInt(newTeam.level),
     };
     try {
       await useAdminApi.createTeam(payload, organization.sid!, organization.userId!);
@@ -150,12 +150,52 @@ export default function OrganizationDashboardPage() {
       </div>
 
       <Modal open={teamModalOpen} onClose={() => setTeamModalOpen(false)} title="New Team" subtitle="Add a team to your organization">
-        <FormField label="Team Name"><FormInput value={newTeam.name} onChange={e => setNewTeam(p => ({ ...p, name: e.target.value }))} placeholder="Strategy Team" /></FormField>
-        <FormField label="Purpose"><FormInput value={newTeam.purpose} onChange={e => setNewTeam(p => ({ ...p, purpose: e.target.value }))} placeholder="Drive strategic initiatives" /></FormField>
-        <div className="grid grid-cols-2 gap-3">
-          <FormField label="Context"><FormInput value={newTeam.context} onChange={e => setNewTeam(p => ({ ...p, context: e.target.value }))} placeholder="Executive" /></FormField>
-          <FormField label="Level"><FormInput type="number" value={newTeam.level} onChange={e => setNewTeam(p => ({ ...p, level: e.target.value }))} min={0} max={10} /></FormField>
+        {/* Name - Single Line */}
+        <FormField label="Team Name">
+          <FormInput
+            value={newTeam.name}
+            onChange={e => setNewTeam(p => ({ ...p, name: e.target.value }))}
+            placeholder="Strategy Team"
+          />
+        </FormField>
+
+        {/* Purpose - Multi Line (TEXT) */}
+        <FormField label="Purpose">
+          <textarea
+            className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            value={newTeam.purpose}
+            onChange={e => setNewTeam(p => ({ ...p, purpose: e.target.value }))}
+            placeholder="What is the primary mission of this team?"
+          />
+        </FormField>
+
+        {/* Context - Multi Line (TEXT) */}
+        <FormField label="Context">
+          <textarea
+            className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            value={newTeam.context}
+            onChange={e => setNewTeam(p => ({ ...p, context: e.target.value }))}
+            placeholder="Describe the operational context..."
+          />
+        </FormField>
+
+        {/* Level - Moved to bottom, spans full width or partial */}
+        <div className="pt-2 border-t border-border mt-4">
+          <FormField label="Hierarchy Level">
+            <FormInput
+              type="number"
+              value={newTeam.level}
+              onChange={e => setNewTeam(p => ({ ...p, level: e.target.value }))}
+              min={0}
+              max={10}
+              className="max-w-[120px]"
+            />
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Level 0 is top-tier (Executive), higher numbers represent sub-levels.
+            </p>
+          </FormField>
         </div>
+
         <div className="flex gap-2.5 mt-5">
           <button onClick={() => setTeamModalOpen(false)} className="flex-1 border border-border bg-background text-muted-foreground rounded-lg py-2.5 font-semibold text-sm hover:text-foreground transition-all">Cancel</button>
           <button onClick={createTeam} className="flex-1 bg-primary text-primary-foreground rounded-lg py-2.5 font-semibold text-sm hover:opacity-90 transition-all">Create Team</button>

@@ -18,13 +18,26 @@ export default function TeamPanel({ team, onRefresh }: TeamPanelProps) {
   const { organization } = useAppState();
 
   const [editOpen, setEditOpen] = useState(false);
-  const [editTeam, setEditTeam] = useState({ name: team.name, purpose: team.purpose || '', context: team.context || '', level: String(team.level ?? 1) });
+  // Fix: Use Nullish Coalescing (??) so 0 stays 0
+  const [editTeam, setEditTeam] = useState({
+    name: team.name,
+    purpose: team.purpose || '',
+    context: team.context || '',
+    level: String(team.level ?? 1)
+  });
+
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   const openEdit = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setEditTeam({ name: team.name, purpose: team.purpose || '', context: team.context || '', level: String(team.level ?? 1) });
+    // Fix: Ensure 0 is captured when opening the modal
+    setEditTeam({
+      name: team.name,
+      purpose: team.purpose || '',
+      context: team.context || '',
+      level: String(team.level ?? 1)
+    });
     setEditOpen(true);
   };
 
@@ -38,12 +51,16 @@ export default function TeamPanel({ team, onRefresh }: TeamPanelProps) {
         name: editTeam.name,
         purpose: editTeam.purpose,
         context: editTeam.context,
-        level: parseInt(editTeam.level) || 1,
+        // Fix: Explicitly check for empty string to allow 0
+        level: editTeam.level === "" ? 1 : parseInt(editTeam.level, 10),
       }, organization.sid!, organization.userId!);
+
       toast.success(`Team "${editTeam.name}" updated`);
       setEditOpen(false);
       setTimeout(onRefresh, 1500);
-    } catch (e: any) { toast.error(`Error: ${e.message}`); }
+    } catch (e: any) {
+      toast.error(`Error: ${e.message}`);
+    }
     setSaving(false);
   };
 
@@ -58,7 +75,9 @@ export default function TeamPanel({ team, onRefresh }: TeamPanelProps) {
       }, organization.sid!, organization.userId!);
       toast.success(`Team "${team.name}" deleted`);
       setTimeout(onRefresh, 1500);
-    } catch (e: any) { toast.error(`Error: ${e.message}`); }
+    } catch (e: any) {
+      toast.error(`Error: ${e.message}`);
+    }
     setDeleting(false);
   };
 
@@ -110,16 +129,62 @@ export default function TeamPanel({ team, onRefresh }: TeamPanelProps) {
       </div>
 
       <Modal open={editOpen} onClose={() => setEditOpen(false)} title="Edit Team" subtitle="Update team details">
-        <FormField label="Team Name"><FormInput value={editTeam.name} onChange={e => setEditTeam(p => ({ ...p, name: e.target.value }))} placeholder="Strategy Team" /></FormField>
-        <FormField label="Purpose"><FormInput value={editTeam.purpose} onChange={e => setEditTeam(p => ({ ...p, purpose: e.target.value }))} placeholder="Drive strategic initiatives" /></FormField>
-        <div className="grid grid-cols-2 gap-3">
-          <FormField label="Context"><FormInput value={editTeam.context} onChange={e => setEditTeam(p => ({ ...p, context: e.target.value }))} placeholder="Executive" /></FormField>
-          <FormField label="Level"><FormInput type="number" value={editTeam.level} onChange={e => setEditTeam(p => ({ ...p, level: e.target.value }))} min={0} max={10} /></FormField>
+        {/* Name - Standard Input */}
+        <FormField label="Team Name">
+          <FormInput
+            value={editTeam.name}
+            onChange={e => setEditTeam(p => ({ ...p, name: e.target.value }))}
+            placeholder="Strategy Team"
+          />
+        </FormField>
+
+        {/* Purpose - Multi-line TEXT */}
+        <FormField label="Purpose">
+          <textarea
+            className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            value={editTeam.purpose}
+            onChange={e => setEditTeam(p => ({ ...p, purpose: e.target.value }))}
+            placeholder="Drive strategic initiatives"
+          />
+        </FormField>
+
+        {/* Context - Multi-line TEXT */}
+        <FormField label="Context">
+          <textarea
+            className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            value={editTeam.context}
+            onChange={e => setEditTeam(p => ({ ...p, context: e.target.value }))}
+            placeholder="Executive"
+          />
+        </FormField>
+
+        {/* Level - Moved to bottom, spanning full width for clarity */}
+        <div className="pt-3 border-t border-border mt-4">
+          <FormField label="Hierarchy Level">
+            <FormInput
+              type="number"
+              value={editTeam.level}
+              onChange={e => setEditTeam(p => ({ ...p, level: e.target.value }))}
+              min={0}
+              max={10}
+              className="max-w-[100px]"
+            />
+          </FormField>
         </div>
+
         <div className="flex gap-2.5 mt-5">
-          <button onClick={() => setEditOpen(false)} className="flex-1 border border-border bg-background text-muted-foreground rounded-lg py-2.5 font-semibold text-sm hover:text-foreground transition-all">Cancel</button>
-          <button onClick={handleUpdateTeam} disabled={saving} className="flex-1 bg-primary text-primary-foreground rounded-lg py-2.5 font-semibold text-sm hover:opacity-90 transition-all disabled:opacity-50">
-            {saving ? 'Saving…' : 'Save Changes'}
+          <button
+            onClick={() => setEditOpen(false)}
+            className="flex-1 border border-border bg-background text-muted-foreground rounded-lg py-2.5 font-semibold text-sm hover:text-foreground transition-all"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleUpdateTeam}
+            disabled={saving}
+            className="flex-1 bg-primary text-primary-foreground rounded-lg py-2.5 font-semibold text-sm hover:opacity-90 transition-all disabled:opacity-50"
+          >
+            {saving ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Save Changes'}
           </button>
         </div>
       </Modal>

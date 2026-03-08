@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { List, Target, Plus, Radio, Loader2 } from 'lucide-react';
+import { List, Target, Plus, Radio, Loader2, AlertCircle } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import PageHeader from '@/components/PageHeader';
 import EmptyState from '@/components/EmptyState';
@@ -22,6 +22,7 @@ export default function RadarDashboardPage() {
   const { organization } = useAppState();
   const [elements, setElements] = useState<RadarElement[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null); // Best Practice: Track error state
   const [view, setView] = useState<'radar' | 'list'>('radar');
   const [detectOpen, setDetectOpen] = useState(false);
   const [updateEl, setUpdateEl] = useState<RadarElement | null>(null);
@@ -30,11 +31,25 @@ export default function RadarDashboardPage() {
 
   const loadRadar = async () => {
     setLoading(true);
+    setError(null);
     try {
-      const r = await useAdminApi.getEnvironmentalChangesForTeam(teamId, organization.orgId!, organization.userId!);
-      setElements(r || []);
-    } catch { setElements([]); }
-    setLoading(false);
+      const r = await useAdminApi.getEnvironmentalChangesForTeam(
+        teamId,
+        organization.orgId!,
+        organization.userId!
+      );
+
+      // Best Practice: Extract the list from the DTO wrapper
+      // If the backend returns our ReadModel, we need r.elements. 
+      // If it fails or is empty, we fall back to an empty array.
+      const list = r?.elements || [];
+      setElements(list);
+    } catch (e: any) {
+      setError(e.message || 'Failed to load radar data');
+      setElements([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDeleteElement = async (eid: string) => {
@@ -48,6 +63,49 @@ export default function RadarDashboardPage() {
       toast.success('Element deleted');
       setTimeout(loadRadar, 1000);
     } catch (e: any) { toast.error(`Error: ${e.message}`); }
+  };
+
+  // ── Render Helpers ───────────────────────────────────────────────────
+
+  const renderContent = () => {
+    // 1. Error State
+    if (error) {
+      return (
+        <EmptyState
+          icon={<AlertCircle className="w-6 h-6 text-destructive" />}
+          message={error}
+          action={<button onClick={loadRadar} className="text-primary underline">Try again</button>}
+        />
+      );
+    }
+
+    // 2. Loading State
+    if (loading) {
+      return <EmptyState icon={<Loader2 className="w-6 h-6 animate-spin opacity-30" />} message="Loading radar..." />;
+    }
+
+    // 3. Empty State
+    if (elements.length === 0) {
+      return <EmptyState icon={<Radio className="w-6 h-6 opacity-30" />} message="No elements yet. Detect the first one." />;
+    }
+
+    // 4. Success State (Radar or List View)
+    if (view === 'radar') {
+      return <RadarSVG elements={elements} onEdit={(el) => setUpdateEl(el)} />;
+    }
+
+    return (
+      <div className="rounded-xl border border-border overflow-hidden bg-card">
+        {elements.map(el => (
+          <RadarElementCard
+            key={el.environmentalChangeId}
+            element={el}
+            onEdit={() => setUpdateEl(el)}
+            onDelete={() => handleDeleteElement(el.environmentalChangeId)}
+          />
+        ))}
+      </div>
+    );
   };
 
   return (
@@ -76,19 +134,7 @@ export default function RadarDashboardPage() {
           }
         />
 
-        {loading ? (
-          <EmptyState icon={<Loader2 className="w-6 h-6 animate-spin opacity-30" />} message="Loading radar..." />
-        ) : view === 'radar' ? (
-          <RadarSVG elements={elements} onEdit={(el) => setUpdateEl(el)} />
-        ) : elements.length === 0 ? (
-          <EmptyState icon={<Radio className="w-6 h-6 opacity-30" />} message="No elements yet. Detect the first one." />
-        ) : (
-          <div className="rounded-xl border border-border overflow-hidden bg-card">
-            {elements.map(el => (
-              <RadarElementCard key={el.environmentalChangeId} element={el} onEdit={() => setUpdateEl(el)} onDelete={() => handleDeleteElement(el.environmentalChangeId)} />
-            ))}
-          </div>
-        )}
+        {renderContent()}
       </main>
 
       <DetectElementModal open={detectOpen} onClose={() => setDetectOpen(false)} teamId={teamId} teamName={teamName} onSuccess={loadRadar} />
