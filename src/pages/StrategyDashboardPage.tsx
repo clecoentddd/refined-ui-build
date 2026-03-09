@@ -618,18 +618,23 @@ export default function StrategyDashboardPage() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar variant="organization" />
+      <div className="flex-1 flex min-h-0">
+        <OrgSidebar activeTeamId={teamId} activePage="strategy" />
+        <div className="flex-1 flex flex-col min-w-0">
 
       {/* ── Top bar ── */}
       <div className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="max-w-[1600px] mx-auto px-6 py-3 flex items-center justify-between gap-4">
+        <div className="px-6 py-3 flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
+            {view === 'board' && (
             <button
-              onClick={() => view === 'board' ? backToStrategies() : navigate('/dashboard/organization')}
+              onClick={() => backToStrategies()}
               className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span className="hidden sm:inline">{view === 'board' ? 'Strategies' : 'Back'}</span>
+              <span className="hidden sm:inline">Strategies</span>
             </button>
+            )}
             {view === 'board' && selectedStrategy && selectedInitiative && (
               <>
                 <div className="w-px h-5 bg-border" />
@@ -666,7 +671,7 @@ export default function StrategyDashboardPage() {
 
       {/* ── Content area ── */}
       <div className="flex-1 overflow-auto">
-        <div className="max-w-[1600px] mx-auto px-6 py-6">
+        <div className="px-6 py-6">
 
           {/* ── STRATEGIES + INITIATIVES (accordion list) ── */}
           {view === 'list' && (
