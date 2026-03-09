@@ -17,6 +17,7 @@ import { useAdminApi } from '@/services/api';
 import StepColumn, { STEPS, type StepKey } from '@/components/strategy/StepColumn';
 import type { StrategyItem } from '@/components/strategy/ItemRow';
 import StrategyBreadcrumb from '@/components/strategy/StrategyBreadcrumb';
+import OrgSidebar from '@/components/OrgSidebar';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
