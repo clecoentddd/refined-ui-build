@@ -1096,6 +1096,8 @@ export default function StrategyDashboardPage() {
           </div>
         </DialogContent>
       </Dialog>
-    </div >
+    </div>
+    </div>
+    </div>
   );
 }
