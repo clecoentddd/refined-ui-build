@@ -50,7 +50,7 @@ function LevelGroup({ level, teams, onRefresh, isFirst }: LevelGroupProps) {
             transition={{ duration: 0.15 }}
             className="overflow-hidden"
           >
-            <div className={`grid gap-3 ${teams.length === 1 ? 'max-w-3xl' : teams.length === 2 ? 'grid-cols-2' : 'grid-cols-1 lg:grid-cols-2 xl:grid-cols-3'}`}>
+            <div className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
               {teams.map(team => (
                 <TeamPanel key={team.teamId} team={team} onRefresh={onRefresh} />
               ))}

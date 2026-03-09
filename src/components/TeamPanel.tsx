@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Pencil, Trash2, Loader2, TrendingUp, Radar } from 'lucide-react';
+import { Pencil, Trash2, Loader2, TrendingUp, Radar, ArrowRight } from 'lucide-react';
 import type { Team } from '@/context/AppContext';
 import { useAppState } from '@/context/AppContext';
 import { useAdminApi } from '@/services/api';
@@ -18,7 +18,6 @@ export default function TeamPanel({ team, onRefresh }: TeamPanelProps) {
   const { organization } = useAppState();
 
   const [editOpen, setEditOpen] = useState(false);
-  // Fix: Use Nullish Coalescing (??) so 0 stays 0
   const [editTeam, setEditTeam] = useState({
     name: team.name,
     purpose: team.purpose || '',
@@ -31,7 +30,6 @@ export default function TeamPanel({ team, onRefresh }: TeamPanelProps) {
 
   const openEdit = (e: React.MouseEvent) => {
     e.stopPropagation();
-    // Fix: Ensure 0 is captured when opening the modal
     setEditTeam({
       name: team.name,
       purpose: team.purpose || '',
@@ -51,7 +49,6 @@ export default function TeamPanel({ team, onRefresh }: TeamPanelProps) {
         name: editTeam.name,
         purpose: editTeam.purpose,
         context: editTeam.context,
-        // Fix: Explicitly check for empty string to allow 0
         level: editTeam.level === "" ? 1 : parseInt(editTeam.level, 10),
       }, organization.sid!, organization.userId!);
 
@@ -81,55 +78,64 @@ export default function TeamPanel({ team, onRefresh }: TeamPanelProps) {
     setDeleting(false);
   };
 
-  const goToRadar = () => {
-    navigate(`/dashboard/radar?teamId=${team.teamId}&organizationId=${team.organizationId}&teamName=${encodeURIComponent(team.name)}`);
+  const buildParams = () =>
+    `teamId=${team.teamId}&organizationId=${team.organizationId}&teamName=${encodeURIComponent(team.name)}`;
+
+  const goToRadar = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate(`/dashboard/radar?${buildParams()}`);
   };
 
   const goToStrategy = (e: React.MouseEvent) => {
     e.stopPropagation();
-    navigate(`/dashboard/strategy?teamId=${team.teamId}&organizationId=${team.organizationId}&teamName=${encodeURIComponent(team.name)}`);
+    navigate(`/dashboard/strategy?${buildParams()}`);
   };
 
   return (
-    <div className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary/10 transition-all">
-      <div className="flex items-center gap-3 px-4 py-3 group">
-        {/* Team info */}
-        <div className="flex-1 min-w-0">
-          <div className="font-semibold text-sm truncate">{team.name || 'Unnamed'}</div>
-          {(team.context || team.purpose) && (
-            <div className="text-[11px] text-muted-foreground truncate mt-0.5">
-              {[team.context, team.purpose].filter(Boolean).join(' · ')}
-            </div>
-          )}
+    <div className="group bg-card border border-border rounded-xl overflow-hidden hover:border-primary/20 hover:shadow-md transition-all">
+      {/* Card header */}
+      <div className="px-5 pt-5 pb-3">
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="font-semibold text-base text-foreground leading-tight">{team.name || 'Unnamed'}</h3>
+          {/* Edit/Delete — hover only */}
+          <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+            <button onClick={openEdit} title="Edit" className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-all">
+              <Pencil className="w-3.5 h-3.5" />
+            </button>
+            <button onClick={handleDeleteTeam} disabled={deleting} title="Delete" className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all disabled:opacity-40">
+              {deleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+            </button>
+          </div>
         </div>
 
-        {/* Navigation buttons */}
+        {/* Purpose / Context */}
+        {team.purpose && (
+          <p className="text-[12px] text-muted-foreground mt-1.5 line-clamp-2 leading-relaxed">{team.purpose}</p>
+        )}
+        {team.context && !team.purpose && (
+          <p className="text-[12px] text-muted-foreground mt-1.5 line-clamp-2 leading-relaxed">{team.context}</p>
+        )}
+      </div>
+
+      {/* Card footer — navigation actions */}
+      <div className="flex border-t border-border">
         <button
           onClick={goToRadar}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-muted-foreground hover:text-primary hover:border-primary/20 hover:bg-primary/5 text-[11px] font-medium transition-all"
+          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-[12px] font-medium text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all border-r border-border"
         >
           <Radar className="w-3.5 h-3.5" /> Radar
+          <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-50 transition-opacity" />
         </button>
         <button
           onClick={goToStrategy}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-muted-foreground hover:text-primary hover:border-primary/20 hover:bg-primary/5 text-[11px] font-medium transition-all"
+          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-[12px] font-medium text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all"
         >
           <TrendingUp className="w-3.5 h-3.5" /> Strategy
+          <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-50 transition-opacity" />
         </button>
-
-        {/* Edit/Delete — hover only */}
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-          <button onClick={openEdit} title="Edit" className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-all">
-            <Pencil className="w-3.5 h-3.5" />
-          </button>
-          <button onClick={handleDeleteTeam} disabled={deleting} title="Delete" className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all disabled:opacity-40">
-            {deleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
-          </button>
-        </div>
       </div>
 
       <Modal open={editOpen} onClose={() => setEditOpen(false)} title="Edit Team" subtitle="Update team details">
-        {/* Name - Standard Input */}
         <FormField label="Team Name">
           <FormInput
             value={editTeam.name}
@@ -138,7 +144,6 @@ export default function TeamPanel({ team, onRefresh }: TeamPanelProps) {
           />
         </FormField>
 
-        {/* Purpose - Multi-line TEXT */}
         <FormField label="Purpose">
           <textarea
             className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -148,7 +153,6 @@ export default function TeamPanel({ team, onRefresh }: TeamPanelProps) {
           />
         </FormField>
 
-        {/* Context - Multi-line TEXT */}
         <FormField label="Context">
           <textarea
             className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -158,7 +162,6 @@ export default function TeamPanel({ team, onRefresh }: TeamPanelProps) {
           />
         </FormField>
 
-        {/* Level - Moved to bottom, spanning full width for clarity */}
         <div className="pt-3 border-t border-border mt-4">
           <FormField label="Hierarchy Level">
             <FormInput
