@@ -138,11 +138,10 @@ export default function RadarDashboardPage() {
         />
 
         {renderContent()}
-      </main>
 
         <DetectElementModal open={detectOpen} onClose={() => setDetectOpen(false)} teamId={teamId} teamName={teamName} onSuccess={loadRadar} />
         {updateEl && <UpdateElementModal open={!!updateEl} onClose={() => setUpdateEl(null)} element={updateEl} teamId={teamId} onSuccess={loadRadar} />}
-        </main>
+      </main>
       </div>
     </div>
   );
