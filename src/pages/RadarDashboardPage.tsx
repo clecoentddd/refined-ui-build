@@ -12,6 +12,7 @@ import UpdateElementModal from '@/components/UpdateElementModal';
 import { useAppState } from '@/context/AppContext';
 import { useAdminApi } from '@/services/api';
 import type { RadarElement } from '@/context/AppContext';
+import OrgSidebar from '@/components/OrgSidebar';
 
 export default function RadarDashboardPage() {
   const [params] = useSearchParams();
@@ -111,7 +112,9 @@ export default function RadarDashboardPage() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar variant="organization" />
-      <main className="flex-1 p-7 max-w-7xl mx-auto w-full">
+      <div className="flex-1 flex min-h-0">
+        <OrgSidebar activeTeamId={teamId} activePage="radar" />
+        <main className="flex-1 p-7 max-w-7xl mx-auto w-full overflow-y-auto">
         <PageHeader
           title={`${teamName} — Radar`}
           subtitle="Environmental changes detected by this team"
@@ -135,10 +138,11 @@ export default function RadarDashboardPage() {
         />
 
         {renderContent()}
-      </main>
 
-      <DetectElementModal open={detectOpen} onClose={() => setDetectOpen(false)} teamId={teamId} teamName={teamName} onSuccess={loadRadar} />
-      {updateEl && <UpdateElementModal open={!!updateEl} onClose={() => setUpdateEl(null)} element={updateEl} teamId={teamId} onSuccess={loadRadar} />}
+        <DetectElementModal open={detectOpen} onClose={() => setDetectOpen(false)} teamId={teamId} teamName={teamName} onSuccess={loadRadar} />
+        {updateEl && <UpdateElementModal open={!!updateEl} onClose={() => setUpdateEl(null)} element={updateEl} teamId={teamId} onSuccess={loadRadar} />}
+      </main>
+      </div>
     </div>
   );
 }
