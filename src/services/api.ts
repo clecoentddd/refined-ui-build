@@ -21,7 +21,10 @@ async function api(url: string, opts: RequestInit & { method?: string } = {}) {
   try { parsed = t ? JSON.parse(t) : {}; } catch { parsed = t; }
   if (!r.ok) {
     console.error(`[STRADAR] ✗ ${method} ${url} → HTTP ${r.status}`, parsed);
-    throw new Error(parsed || 'HTTP ' + r.status);
+    const errMsg = typeof parsed === 'string'
+      ? parsed
+      : (parsed?.message || parsed?.error || `HTTP ${r.status}`);
+    throw new Error(errMsg);
   }
   console.log(`[STRADAR] ✓ ${method} ${url} → HTTP ${r.status}`, parsed);
   return parsed;
@@ -118,8 +121,8 @@ export const useAdminApi = {
   },
 
   // Strategy API
-  createStrategyDraft(payload: { teamId: string; organizationId: string; title: string; timeframe: string }, userId: string, sid: string) {
-    return api('/api/v1/strategies/draft', {
+  createStrategy(payload: { teamId: string; organizationId: string; title: string; timeframe: string; status: string }, userId: string, sid: string) {
+    return api('/api/v1/strategies', {
       method: 'POST',
       headers: hdrs(sid, userId, payload.organizationId),
       body: JSON.stringify(payload)

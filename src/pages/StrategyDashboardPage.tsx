@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 import {
   TrendingUp, Plus, ChevronRight, ChevronDown, Loader2, Flag, ArrowLeft,
-  Save, Clock, LayoutGrid, Pencil, Trash2, Check, X, Link, Search
+  Save, Clock, LayoutGrid, Pencil, Trash2, Check, X, Link, Search, Users
 } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Navbar from '@/components/Navbar';
 import EmptyState from '@/components/EmptyState';
 import Modal from '@/components/Modal';
-import { FormField, FormInput } from '@/components/FormElements';
+import { FormField, FormInput, FormSelect } from '@/components/FormElements';
 import Pill from '@/components/Pill';
 import { useAppState } from '@/context/AppContext';
 import { useAdminApi } from '@/services/api';
@@ -70,7 +70,7 @@ function mapServerItems(raw: any[]): StrategyItem[] {
 export default function StrategyDashboardPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { organization } = useAppState();
+  const { organization, teams } = useAppState();
 
   const teamId = searchParams.get('teamId') ?? '';
   const teamName = searchParams.get('teamName') ?? '';
@@ -121,7 +121,7 @@ export default function StrategyDashboardPage() {
   const [initiativeModalOpen, setInitiativeModalOpen] = useState(false);
   const [strategySubmitting, setStrategySubmitting] = useState(false);
   const [initiativeSubmitting, setInitiativeSubmitting] = useState(false);
-  const [newStrategy, setNewStrategy] = useState({ title: '', timeframe: '' });
+  const [newStrategy, setNewStrategy] = useState({ title: '', timeframe: '', status: 'DRAFT' });
   const [newInitiative, setNewInitiative] = useState({ name: '' });
 
   // ── Rename/delete initiative
@@ -528,13 +528,19 @@ export default function StrategyDashboardPage() {
     if (!newStrategy.timeframe.trim()) return toast.error('Timeframe is required');
     setStrategySubmitting(true);
     try {
-      await useAdminApi.createStrategyDraft(
-        { teamId, organizationId, title: newStrategy.title, timeframe: newStrategy.timeframe },
+      await useAdminApi.createStrategy(
+        {
+          teamId,
+          organizationId,
+          title: newStrategy.title,
+          timeframe: newStrategy.timeframe,
+          status: newStrategy.status
+        },
         organization.userId || '0000', organization.sid!
       );
       toast.success(`Strategy "${newStrategy.title}" created`);
       setStrategyModalOpen(false);
-      setNewStrategy({ title: '', timeframe: '' });
+      setNewStrategy({ title: '', timeframe: '', status: 'DRAFT' });
       setTimeout(loadStrategies, 1500);
     } catch (e: any) { toast.error(`Error: ${e.message}`); }
     setStrategySubmitting(false);
@@ -950,6 +956,18 @@ export default function StrategyDashboardPage() {
             <FormField label="Timeframe">
               <FormInput value={newStrategy.timeframe} onChange={e => setNewStrategy(p => ({ ...p, timeframe: e.target.value }))} placeholder="Q1–Q4 2026" />
             </FormField>
+            <FormField label="Status">
+              <FormSelect
+                value={newStrategy.status}
+                onChange={e => setNewStrategy(p => ({ ...p, status: e.target.value }))}
+              >
+                <option value="DRAFT">DRAFT</option>
+                <option value="ACTIVE">ACTIVE</option>
+                <option value="COMPLETED">COMPLETED</option>
+                <option value="OBSOLETE">OBSOLETE</option>
+                <option value="DELETED">DELETED</option>
+              </FormSelect>
+            </FormField>
             <div className="flex gap-2.5 mt-5">
               <button onClick={() => setStrategyModalOpen(false)} className="flex-1 border border-border bg-background text-muted-foreground rounded-lg py-2.5 font-semibold text-sm hover:text-foreground transition-all">Cancel</button>
               <button onClick={createStrategy} disabled={strategySubmitting} className="flex-1 bg-primary text-primary-foreground rounded-lg py-2.5 font-semibold text-sm hover:opacity-90 transition-all disabled:opacity-50">
@@ -1102,11 +1120,12 @@ export default function StrategyDashboardPage() {
                       .filter(i => !iLinksSearch.trim() || i.initiativeName.toLowerCase().includes(iLinksSearch.trim().toLowerCase()))
                       .map(i => {
                         const selected = draftLinkedInitiativeIds.has(i.initiativeId);
+                        const team = teams.find(t => t.teamId === i.teamId);
                         return (
                           <button
                             key={i.initiativeId}
                             onClick={() => toggleDraftILink(i.initiativeId)}
-                            className={`flex items-center gap-2.5 w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${selected
+                            className={`flex items-center gap-3 w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${selected
                               ? 'bg-primary/10 text-primary'
                               : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
                               }`}
@@ -1115,8 +1134,18 @@ export default function StrategyDashboardPage() {
                               }`}>
                               {selected && <Check className="w-2.5 h-2.5 text-primary-foreground" />}
                             </span>
-                            <div className="flex flex-col">
-                              <span>{i.initiativeName}</span>
+                            <div className="flex flex-col min-w-0">
+                              <span className="truncate">{i.initiativeName}</span>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <span className="text-[10px] opacity-60 flex items-center gap-1">
+                                  <Users className="w-2.5 h-2.5" /> {team?.name || 'Unknown Team'}
+                                </span>
+                                {team?.level !== undefined && (
+                                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-bold tracking-tight">
+                                    LVL {team.level}
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </button>
                         );
