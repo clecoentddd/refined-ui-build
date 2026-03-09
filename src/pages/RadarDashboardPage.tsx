@@ -112,7 +112,9 @@ export default function RadarDashboardPage() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar variant="organization" />
-      <main className="flex-1 p-7 max-w-7xl mx-auto w-full">
+      <div className="flex-1 flex min-h-0">
+        <OrgSidebar activeTeamId={teamId} activePage="radar" />
+        <main className="flex-1 p-7 max-w-7xl mx-auto w-full overflow-y-auto">
         <PageHeader
           title={`${teamName} — Radar`}
           subtitle="Environmental changes detected by this team"
