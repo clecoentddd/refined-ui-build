@@ -12,6 +12,7 @@ import UpdateElementModal from '@/components/UpdateElementModal';
 import { useAppState } from '@/context/AppContext';
 import { useAdminApi } from '@/services/api';
 import type { RadarElement } from '@/context/AppContext';
+import OrgSidebar from '@/components/OrgSidebar';
 
 export default function RadarDashboardPage() {
   const [params] = useSearchParams();
