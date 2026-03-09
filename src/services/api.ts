@@ -157,6 +157,14 @@ export const useAdminApi = {
       headers: hdrs(undefined, userId, organizationId)
     });
   },
+  getInitiativesByOrganization(organizationId: string, userId: string) {
+    // Use a slash instead of a query param if that's how the backend is mapped
+    return api(`/initiativelist/by-organization?organizationId=${organizationId}`, {
+      method: 'GET',
+      headers: hdrs(undefined, userId, organizationId)
+    });
+
+  },
   /** GET /initiativelist/{id} → { data: InitiativesReadModelEntity } */
   getInitiativeById(initiativeId: string, organizationId: string, userId?: string) {
     return api(`/initiativelist/${initiativeId}`, {

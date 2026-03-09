@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { Circle, Loader2, Trash2 } from 'lucide-react';
 
 export interface StrategyItem {
@@ -16,7 +16,22 @@ interface ItemRowProps {
 
 export default function ItemRow({ item, saving, onSave, onDelete }: ItemRowProps) {
   const [draft, setDraft] = useState(item.content);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const prevContent = useRef(item.content);
+
+  // 1. Logic to auto-resize the textarea height based on content
+  const adjustHeight = () => {
+    const node = textareaRef.current;
+    if (node) {
+      node.style.height = 'auto';
+      node.style.height = `${node.scrollHeight}px`;
+    }
+  };
+
+  // Adjust height on initial mount and when content changes
+  useLayoutEffect(() => {
+    adjustHeight();
+  }, [item.content]);
 
   useEffect(() => {
     if (!saving) {
@@ -33,36 +48,44 @@ export default function ItemRow({ item, saving, onSave, onDelete }: ItemRowProps
   };
 
   return (
-    <div className="group flex items-start gap-2.5 rounded-lg border border-transparent hover:border-border hover:bg-muted/30 px-3 py-2.5 transition-all">
-      <Circle className="w-3 h-3 mt-[6px] flex-shrink-0 text-muted-foreground/40" />
+    <div className="group flex items-start gap-2 rounded-md border border-transparent hover:border-border/50 hover:bg-primary/5 px-2 py-1.5 transition-all">
+      {/* Minimalist dot indicator */}
+      <div className="mt-2 flex-shrink-0">
+        <Circle className={`w-2 h-2 ${saving ? 'animate-pulse text-primary' : 'text-primary/30'}`} fill="currentColor" />
+      </div>
+
       <textarea
-        className="flex-1 text-sm leading-relaxed bg-transparent border-0 resize-none outline-none text-foreground placeholder:text-muted-foreground/40 transition-colors min-h-[1.5rem]"
+        ref={textareaRef}
+        className="flex-1 text-[13px] leading-snug bg-transparent border-0 resize-none outline-none text-foreground placeholder:text-muted-foreground/30 transition-colors min-h-[1.2rem] py-0.5 overflow-hidden"
         rows={1}
         value={draft}
         onChange={e => {
           setDraft(e.target.value);
-          e.target.style.height = 'auto';
-          e.target.style.height = e.target.scrollHeight + 'px';
+          adjustHeight();
         }}
         onBlur={handleBlur}
         onKeyDown={e => {
           if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
-            (e.target as HTMLTextAreaElement).blur();
+            textareaRef.current?.blur();
           }
         }}
-        placeholder="Type something…"
+        placeholder="Describe strategy..."
       />
-      {saving ? (
-        <Loader2 className="w-3.5 h-3.5 mt-[5px] flex-shrink-0 animate-spin text-muted-foreground/50" />
-      ) : (
-        <button
-          onClick={() => onDelete(item.itemId)}
-          className="opacity-0 group-hover:opacity-100 mt-[4px] flex-shrink-0 text-muted-foreground/40 hover:text-destructive transition-all"
-        >
-          <Trash2 className="w-3.5 h-3.5" />
-        </button>
-      )}
+
+      <div className="flex items-center justify-center w-5 h-5 mt-0.5 flex-shrink-0">
+        {saving ? (
+          <Loader2 className="w-3 h-3 animate-spin text-primary" />
+        ) : (
+          <button
+            onClick={() => onDelete(item.itemId)}
+            className="opacity-0 group-hover:opacity-100 text-muted-foreground/40 hover:text-primary transition-all p-1"
+            title="Delete item"
+          >
+            <Trash2 className="w-3 h-3" />
+          </button>
+        )}
+      </div>
     </div>
   );
 }
