@@ -133,6 +133,13 @@ export const useAdminApi = {
       headers: hdrs(undefined, userId, organizationId),
     });
   },
+  updateStrategy(strategyId: string, payload: { teamId: string; organizationId: string; title: string; timeframe: string; status: string }, userId: string, sid: string) {
+    return api(`/api/v1/strategies/${strategyId}`, {
+      method: 'PUT',
+      headers: hdrs(sid, userId, payload.organizationId),
+      body: JSON.stringify(payload)
+    });
+  },
 
   // Initiative API
   createInitiative(initiativeId: string, payload: { initiativeId: string; initiativeName: string; organizationId: string; strategyId: string; teamId: string }, userId: string, sid: string) {

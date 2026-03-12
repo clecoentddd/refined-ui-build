@@ -118,6 +118,7 @@ export default function StrategyDashboardPage() {
 
   // ── Modals
   const [strategyModalOpen, setStrategyModalOpen] = useState(false);
+  const [editingStrategy, setEditingStrategy] = useState<Strategy | null>(null);
   const [initiativeModalOpen, setInitiativeModalOpen] = useState(false);
   const [strategySubmitting, setStrategySubmitting] = useState(false);
   const [initiativeSubmitting, setInitiativeSubmitting] = useState(false);
@@ -146,7 +147,7 @@ export default function StrategyDashboardPage() {
         status: s.status,
       })));
     } catch (e: any) {
-      toast.error(`Could not load strategies: ${e.message || 'Unknown error'}`);
+      toast.error(`Could not load strategies: ${cleanErrorMessage(e)}`);
       setStrategies([]);
     }
     setStrategiesLoading(false);
@@ -370,14 +371,42 @@ export default function StrategyDashboardPage() {
     setILinksSaving(false);
   };
 
+  const cleanErrorMessage = (err: any): string => {
+    let msg: string = err?.message ?? String(err);
+
+    // 1. Remove common technical wrappers
+    msg = msg.replace(/Request processing failed[:;]\s*/i, '');
+    msg = msg.replace(/nested exception is\s*/i, '');
+
+    // 2. Extract message from common Exception patterns (like IllegalStateException)
+    const exceptionRex = /[a-zA-Z.]+(?:Exception|Error):\s*(.*?)(?=\n|\s+at\s+|$)/i;
+    const match = msg.match(exceptionRex);
+    if (match && match[1]) {
+      msg = match[1].trim();
+    }
+
+    // 3. Truncate at the first sign of a stack trace or technical bloat if not already caught
+    const stackTraceIdx = msg.search(/\s+at\s+[a-z0-9_.]+\(/i);
+    if (stackTraceIdx !== -1) {
+      msg = msg.substring(0, stackTraceIdx).trim();
+    }
+
+    // 4. Remove trailing tech characters often found in Spring logs
+    msg = msg.replace(/\s*~\[classes\/.*$/i, '');
+    msg = msg.replace(/\. at\s*.*$/i, ''); // Specific fix for the user's reported format
+
+    return msg || 'Unknown error';
+  };
+
   const itemErrorMsg = (e: any): string => {
-    const msg: string = e?.message ?? '';
+    const cleaned = cleanErrorMessage(e);
+    const msg = cleaned.toLowerCase();
     if (msg.includes('500') || msg.includes('Internal')) {
       return 'Server error – the initiative aggregate may not exist in the event store. Try creating a fresh initiative through the UI.';
     }
     if (msg.includes('400')) return 'Bad request – check the payload fields.';
     if (msg.includes('missing') || msg.includes('header')) return 'Missing required header (x-user-id / x-session-id).';
-    return `Could not save item: ${msg || 'unknown error'}`;
+    return cleaned;
   };
 
   const markSaving = (id: string) => setSavingIds(prev => new Set(prev).add(id));
@@ -542,7 +571,32 @@ export default function StrategyDashboardPage() {
       setStrategyModalOpen(false);
       setNewStrategy({ title: '', timeframe: '', status: 'DRAFT' });
       setTimeout(loadStrategies, 1500);
-    } catch (e: any) { toast.error(`Error: ${e.message}`); }
+    } catch (e: any) { toast.error(`Error: ${cleanErrorMessage(e)}`); }
+    setStrategySubmitting(false);
+  };
+
+  const handleUpdateStrategy = async () => {
+    if (!editingStrategy || !editingStrategy.title.trim()) return toast.error('Title is required');
+    if (!editingStrategy.timeframe.trim()) return toast.error('Timeframe is required');
+    setStrategySubmitting(true);
+    try {
+      await useAdminApi.updateStrategy(
+        editingStrategy.strategyId,
+        {
+          teamId,
+          organizationId,
+          title: editingStrategy.title,
+          timeframe: editingStrategy.timeframe,
+          status: editingStrategy.status || 'DRAFT'
+        },
+        organization.userId || '0000', organization.sid!
+      );
+      toast.success(`Strategy "${editingStrategy.title}" updated`);
+      setEditingStrategy(null);
+      setTimeout(loadStrategies, 1000);
+    } catch (e: any) {
+      toast.error(`Error: ${cleanErrorMessage(e)}`);
+    }
     setStrategySubmitting(false);
   };
 
@@ -562,7 +616,7 @@ export default function StrategyDashboardPage() {
       toast.success('Initiative renamed');
     } catch (e: any) {
       setInitiatives(list => list.map(i => i.initiativeId === initiative.initiativeId ? { ...i, initiativeName: prev } : i));
-      toast.error(`Could not rename initiative: ${e.message}`);
+      toast.error(`Could not rename initiative: ${cleanErrorMessage(e)}`);
     }
   };
 
@@ -580,7 +634,7 @@ export default function StrategyDashboardPage() {
       toast.success('Initiative deleted');
     } catch (e: any) {
       setInitiatives(snapshot);
-      toast.error(`Could not delete initiative: ${e.message}`);
+      toast.error(`Could not delete initiative: ${cleanErrorMessage(e)}`);
     }
     setDeletingId(null);
   };
@@ -766,8 +820,20 @@ export default function StrategyDashboardPage() {
                                 </div>
                               </div>
 
-                              <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform duration-200 flex-shrink-0 ${isExpanded ? 'rotate-180' : ''
-                                }`} />
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setEditingStrategy(s);
+                                  }}
+                                  className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                                  title="Edit Strategy"
+                                >
+                                  <Pencil className="w-3.5 h-3.5" />
+                                </button>
+                                <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''
+                                  }`} />
+                              </div>
                             </button>
 
                             {/* Expanded initiatives */}
@@ -1076,6 +1142,60 @@ export default function StrategyDashboardPage() {
               </div>
             </DialogContent>
           </Dialog>
+
+          {/* ── Edit Strategy Modal ── */}
+          <Modal
+            open={!!editingStrategy}
+            onClose={() => setEditingStrategy(null)}
+            title="Edit Strategy"
+            subtitle={`For team: ${teamName}`}
+          >
+            {editingStrategy && (
+              <>
+                <FormField label="Title">
+                  <FormInput
+                    value={editingStrategy.title}
+                    onChange={e => setEditingStrategy(prev => prev ? { ...prev, title: e.target.value } : null)}
+                    placeholder="2026 Growth Plan"
+                  />
+                </FormField>
+                <FormField label="Timeframe">
+                  <FormInput
+                    value={editingStrategy.timeframe}
+                    onChange={e => setEditingStrategy(prev => prev ? { ...prev, timeframe: e.target.value } : null)}
+                    placeholder="Q1–Q4 2026"
+                  />
+                </FormField>
+                <FormField label="Status">
+                  <FormSelect
+                    value={editingStrategy.status}
+                    onChange={e => setEditingStrategy(prev => prev ? { ...prev, status: e.target.value } : null)}
+                  >
+                    <option value="DRAFT">DRAFT</option>
+                    <option value="ACTIVE">ACTIVE</option>
+                    <option value="COMPLETED">COMPLETED</option>
+                    <option value="OBSOLETE">OBSOLETE</option>
+                    <option value="DELETED">DELETED</option>
+                  </FormSelect>
+                </FormField>
+                <div className="flex gap-2.5 mt-5">
+                  <button
+                    onClick={() => setEditingStrategy(null)}
+                    className="flex-1 border border-border bg-background text-muted-foreground rounded-lg py-2.5 font-semibold text-sm hover:text-foreground transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleUpdateStrategy}
+                    disabled={strategySubmitting}
+                    className="flex-1 bg-primary text-primary-foreground rounded-lg py-2.5 font-semibold text-sm hover:opacity-90 transition-all disabled:opacity-50"
+                  >
+                    {strategySubmitting ? 'Saving…' : 'Save Changes'}
+                  </button>
+                </div>
+              </>
+            )}
+          </Modal>
 
           {/* ── Initiative Links Selector Modal ── */}
           <Dialog open={iLinksModalOpen} onOpenChange={v => !v && setILinksModalOpen(false)}>
