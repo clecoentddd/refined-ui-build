@@ -794,32 +794,39 @@ export default function StrategyDashboardPage() {
                               : 'border-border bg-card hover:border-primary/20 hover:shadow-sm'
                               }`}
                           >
-                            {/* Strategy header row */}
-                            <button
-                              onClick={() => toggleStrategy(s)}
-                              className="w-full flex items-center gap-4 px-5 py-4 text-left group"
-                            >
-                              <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${isExpanded ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-                                }`}>
-                                <TrendingUp className="w-4 h-4" />
+                            {/* Strategy header row - outer div avoids invalid <button> nesting */}
+                            <div className="w-full flex items-center gap-4 px-5 py-4 group">
+                              {/* Clickable area that toggles expand */}
+                              <div
+                                role="button"
+                                tabIndex={0}
+                                onClick={() => toggleStrategy(s)}
+                                onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && toggleStrategy(s)}
+                                className="flex items-center gap-4 flex-1 min-w-0 text-left cursor-pointer"
+                              >
+                                <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${isExpanded ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                                  }`}>
+                                  <TrendingUp className="w-4 h-4" />
+                                </div>
+
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2.5 mb-0.5">
+                                    <h3 className="font-semibold text-foreground truncate">{s.title}</h3>
+                                    {s.status && <Pill variant={statusVariant(s.status)}>{s.status}</Pill>}
+                                  </div>
+                                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                    <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{s.timeframe}</span>
+                                    {initiativesByStrategy[s.strategyId] && (
+                                      <span className="flex items-center gap-1">
+                                        <Flag className="w-3 h-3" />
+                                        {sInitiatives.length} initiative{sInitiatives.length !== 1 ? 's' : ''}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
                               </div>
 
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2.5 mb-0.5">
-                                  <h3 className="font-semibold text-foreground truncate">{s.title}</h3>
-                                  {s.status && <Pill variant={statusVariant(s.status)}>{s.status}</Pill>}
-                                </div>
-                                <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                                  <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{s.timeframe}</span>
-                                  {initiativesByStrategy[s.strategyId] && (
-                                    <span className="flex items-center gap-1">
-                                      <Flag className="w-3 h-3" />
-                                      {sInitiatives.length} initiative{sInitiatives.length !== 1 ? 's' : ''}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-
+                              {/* Edit + chevron — siblings, not children of the toggle button */}
                               <div className="flex items-center gap-2 flex-shrink-0">
                                 <button
                                   onClick={(e) => {
@@ -831,10 +838,12 @@ export default function StrategyDashboardPage() {
                                 >
                                   <Pencil className="w-3.5 h-3.5" />
                                 </button>
-                                <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''
-                                  }`} />
+                                <ChevronDown
+                                  onClick={() => toggleStrategy(s)}
+                                  className={`w-4 h-4 text-muted-foreground transition-transform duration-200 cursor-pointer ${isExpanded ? 'rotate-180' : ''}`}
+                                />
                               </div>
-                            </button>
+                            </div>
 
                             {/* Expanded initiatives */}
                             <AnimatePresence>
