@@ -1,6 +1,10 @@
 const BASE = 'http://localhost:8080';
 export const GENESIS_ADMIN_ID = '00000000-0000-0000-0000-000000000001';
 
+const auth0Domain = import.meta.env.VITE_AUTH0_DOMAIN;
+const auth0ClientId = import.meta.env.VITE_AUTH0_CLIENT_ID;
+const auth0ClientSecret = import.meta.env.VITE_AUTH0_CLIENT_SECRET;
+
 function hdrs(sid?: string, userId?: string, orgId?: string) {
   const h: any = {
     'Content-Type': 'application/json',
@@ -53,9 +57,24 @@ export const useAdminApi = {
   },
 
   getOrganizationList() { return api('/organizationlist'); },
-  signInToOrganization(personId: string, sid: string) {
-    return api('/signintoorganizationpersonaccount', { method: 'POST', headers: hdrs(sid), body: JSON.stringify({ personId }) });
+
+
+
+  signInToOrganization(
+    usernameOrEmail: string,
+    password: string,
+    sid: string
+  ) {
+    return api('/signintoorganizationpersonaccount', {
+      method: 'POST',
+      headers: {
+        ...hdrs(sid),
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ usernameOrEmail, password })
+    });
   },
+
   getPersonAccount(personId: string) {
     return api(`/account/${personId}`);
   },
