@@ -6,11 +6,13 @@ const auth0ClientId = import.meta.env.VITE_AUTH0_CLIENT_ID;
 const auth0ClientSecret = import.meta.env.VITE_AUTH0_CLIENT_SECRET;
 
 function hdrs(sid?: string, userId?: string, orgId?: string) {
+  const token = localStorage.getItem('auth_token');
   const h: any = {
     'Content-Type': 'application/json',
     'X-Session-Id': sid || crypto.randomUUID(),
     'X-Correlation-Id': crypto.randomUUID(),
   };
+  if (token) h['Authorization'] = `Bearer ${token}`;
   if (userId) h['x-user-id'] = userId;
   if (orgId) h['organizationId'] = orgId;
   return h;
@@ -76,7 +78,9 @@ export const useAdminApi = {
   },
 
   getPersonAccount(personId: string) {
-    return api(`/account/${personId}`);
+    return api(`/account/${personId}`, {
+      headers: hdrs()
+    });
   },
 
   createTeam(payload: any, sid: string, userId: string) {

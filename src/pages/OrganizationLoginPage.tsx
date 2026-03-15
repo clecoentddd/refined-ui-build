@@ -29,14 +29,18 @@ export default function OrganizationLoginPage() {
         password,
         sid
       );
+      localStorage.setItem('auth_token', account.token);
+
+      // 2️⃣ Fetch full account details using personId
+      const accountDetails = await useAdminApi.getPersonAccount(account.personId);
 
       // 3️⃣ Update context state
       setOrganization({
         sid,
         email: account.email || null,
         orgId: account.organizationId,
-        orgName: null,        // not returned by backend
-        role: null,           // not returned by backend
+        orgName: accountDetails.organizationName || null,        // not returned by backend
+        role: accountDetails.role || null,           // not returned by backend
         adminId: account.personId,
         username: account.username,
         userId: account.personId,
