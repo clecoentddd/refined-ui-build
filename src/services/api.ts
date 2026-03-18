@@ -62,6 +62,7 @@ export const useAdminApi = {
     password: string,
     sid: string
   ) {
+    localStorage.removeItem('auth_token');
     return api('/signintoorganizationpersonaccount', {
       method: 'POST',
       headers: {
