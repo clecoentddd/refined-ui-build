@@ -24,7 +24,7 @@ export default function HomePage() {
             Know what's<br /><span className="text-primary">coming.</span>
           </h1>
           <p className="text-base text-muted-foreground mb-0 max-w-lg mx-auto leading-relaxed">
-            Detect, assess and respond to threats and opportunities before they hit your organization.
+            Detect, assess and respond to environmental changes with the will to win.
           </p>
         </motion.div>
 

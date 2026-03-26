@@ -114,34 +114,51 @@ export default function RadarDashboardPage() {
       <Navbar variant="organization" />
       <div className="flex-1 flex min-h-0">
         <OrgSidebar activeTeamId={teamId} activePage="radar" />
-        <main className="flex-1 p-7 max-w-7xl mx-auto w-full overflow-y-auto">
-        <PageHeader
-          title={`${teamName} — Radar`}
-          subtitle="Environmental changes detected by this team"
-          actions={
+        <main className="flex-1 px-7 pt-4 pb-7 max-w-7xl mx-auto w-full overflow-y-auto">
+          <div className="flex items-center justify-between mb-3">
+
+            <h1 className="text-xl font-bold tracking-tight">
+              {teamName} — Radar
+            </h1>
+
             <div className="flex items-center gap-2">
               <div className="flex gap-0.5 bg-muted rounded-lg p-0.5">
                 <button
                   onClick={() => setView('radar')}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-medium transition-all ${view === 'radar' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-                ><Target className="w-3.5 h-3.5" /> Radar</button>
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-medium transition-all ${view === 'radar'
+                    ? 'bg-card text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                >
+                  <Target className="w-3.5 h-3.5" /> Radar
+                </button>
+
                 <button
                   onClick={() => setView('list')}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-medium transition-all ${view === 'list' ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-                ><List className="w-3.5 h-3.5" /> List</button>
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-medium transition-all ${view === 'list'
+                    ? 'bg-card text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                >
+                  <List className="w-3.5 h-3.5" /> List
+                </button>
               </div>
-              <button onClick={() => setDetectOpen(true)} className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground px-4 py-2 rounded-lg font-semibold text-sm hover:opacity-90 transition-all">
+
+              <button
+                onClick={() => setDetectOpen(true)}
+                className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground px-4 py-2 rounded-lg font-semibold text-sm hover:opacity-90 transition-all"
+              >
                 <Plus className="w-4 h-4" /> Detect
               </button>
             </div>
-          }
-        />
 
-        {renderContent()}
+          </div>
 
-        <DetectElementModal open={detectOpen} onClose={() => setDetectOpen(false)} teamId={teamId} teamName={teamName} onSuccess={loadRadar} />
-        {updateEl && <UpdateElementModal open={!!updateEl} onClose={() => setUpdateEl(null)} element={updateEl} teamId={teamId} onSuccess={loadRadar} />}
-      </main>
+          {renderContent()}
+
+          <DetectElementModal open={detectOpen} onClose={() => setDetectOpen(false)} teamId={teamId} teamName={teamName} onSuccess={loadRadar} />
+          {updateEl && <UpdateElementModal open={!!updateEl} onClose={() => setUpdateEl(null)} element={updateEl} teamId={teamId} onSuccess={loadRadar} />}
+        </main>
       </div>
     </div>
   );

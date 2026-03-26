@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import Modal from '@/components/Modal';
-import { FormField, FormInput, FormSelect } from '@/components/FormElements';
+import { FormField, FormInput, FormSelect, FormTextarea } from '@/components/FormElements';
 import { useAppState } from '@/context/AppContext';
 import { useAdminApi } from '@/services/api';
 import type { RadarElement } from '@/context/AppContext';
+
 
 interface Props {
   open: boolean;
@@ -18,18 +19,18 @@ export default function UpdateElementModal({ open, onClose, element, teamId, onS
   const { organization } = useAppState();
   const [form, setForm] = useState({
     title: '', type: 'THREAT', category: 'BUSINESS', distance: 'DETECTED',
-    impact: 'LOW', risk: 'LOW', assess: '', detect: '', respond: '',
+    impact: 'LOW', risk: 'LOW', detect: '', assess: '', respond: '',
   });
 
   useEffect(() => {
     setForm({
       title: element.title, type: element.type, category: element.category,
       distance: element.distance, impact: element.impact, risk: element.risk,
-      assess: element.assess || '', detect: element.detect || '', respond: element.respond || '',
+      detect: element.detect || '', assess: element.assess || '', respond: element.respond || '',
     });
   }, [element]);
 
-  const update = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+  const update = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
     setForm(p => ({ ...p, [k]: e.target.value }));
 
   const submit = async () => {
@@ -59,9 +60,9 @@ export default function UpdateElementModal({ open, onClose, element, teamId, onS
         <FormField label="Impact"><FormSelect value={form.impact} onChange={update('impact')}><option value="LOW">Low</option><option value="MEDIUM">Medium</option><option value="HIGH">High</option></FormSelect></FormField>
         <FormField label="Risk"><FormSelect value={form.risk} onChange={update('risk')}><option value="LOW">Low</option><option value="MEDIUM">Medium</option><option value="HIGH">High</option></FormSelect></FormField>
       </div>
-      <FormField label="Assess"><FormInput value={form.assess} onChange={update('assess')} /></FormField>
-      <FormField label="Detect"><FormInput value={form.detect} onChange={update('detect')} /></FormField>
-      <FormField label="Respond"><FormInput value={form.respond} onChange={update('respond')} /></FormField>
+      <FormField label="Detect"><FormTextarea value={form.detect} onChange={update('detect')} /></FormField>
+      <FormField label="Assess"><FormTextarea value={form.assess} onChange={update('assess')} /></FormField>
+      <FormField label="Respond"><FormTextarea value={form.respond} onChange={update('respond')} /></FormField>
       <div className="flex gap-2.5 mt-5">
         <button onClick={onClose} className="flex-1 border border-border bg-background text-muted-foreground rounded-lg py-2.5 font-semibold text-sm hover:text-foreground transition-all">Cancel</button>
         <button onClick={submit} className="flex-1 bg-primary text-primary-foreground rounded-lg py-2.5 font-semibold text-sm hover:opacity-90 transition-all">Save Changes</button>

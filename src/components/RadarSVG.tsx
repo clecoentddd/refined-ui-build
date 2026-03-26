@@ -17,10 +17,10 @@ import type { RadarElement } from '@/context/AppContext';
  *             geom 3 → angle 270°–360° → screen top-right
  */
 export const QUADRANTS: Record<string, { geom: number; label: string }> = {
-  PEOPLE_KNOWLEDGE: { geom: 3, label: 'People & Knowledge' }, // top-right
-  OPERATING_MODEL: { geom: 2, label: 'Operating Model' }, // top-left
-  BUSINESS: { geom: 1, label: 'Business' }, // bottom-left
-  CAPABILITIES: { geom: 0, label: 'Capabilities' }, // bottom-right
+  PEOPLE_KNOWLEDGE: { geom: 0, label: 'People & Knowledge' }, // top-right
+  OPERATING_MODEL: { geom: 1, label: 'Operating Model' }, // top-left
+  BUSINESS: { geom: 2, label: 'Business' }, // bottom-left
+  CAPABILITIES: { geom: 3, label: 'Capabilities' }, // bottom-right
 };
 
 /**
@@ -124,7 +124,7 @@ export default function RadarSVG({ elements, activeQ, selectedEl, onSelectEl, on
   const R = 300;
   const PAD = 80;
 
-  const fullViewBox = `${-(R + PAD)} ${-(R + PAD)} ${(R + PAD) * 2} ${(R + PAD) * 2}`;
+  const fullViewBox = `${-(R + PAD)} ${-(R + PAD) + 70} ${(R + PAD) * 2} ${(R + PAD) * 2}`;
   const activeViewBox = activeQ !== null ? zoomedViewBox(activeQ, R, PAD) : fullViewBox;
 
   // Build dot list

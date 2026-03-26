@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import Modal from '@/components/Modal';
-import { FormField, FormInput, FormSelect } from '@/components/FormElements';
+import { FormField, FormInput, FormSelect, FormTextarea } from '@/components/FormElements';
 import { useAppState } from '@/context/AppContext';
 import { useAdminApi } from '@/services/api';
 
@@ -20,7 +20,7 @@ export default function DetectElementModal({ open, onClose, teamId, teamName, on
     impact: 'LOW', risk: 'LOW', assess: '', detect: '', respond: '',
   });
 
-  const update = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+  const update = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
     setForm(p => ({ ...p, [k]: e.target.value }));
 
   const submit = async () => {
@@ -53,9 +53,9 @@ export default function DetectElementModal({ open, onClose, teamId, teamName, on
         <FormField label="Impact"><FormSelect value={form.impact} onChange={update('impact')}><option value="LOW">Low</option><option value="MEDIUM">Medium</option><option value="HIGH">High</option></FormSelect></FormField>
         <FormField label="Risk"><FormSelect value={form.risk} onChange={update('risk')}><option value="LOW">Low</option><option value="MEDIUM">Medium</option><option value="HIGH">High</option></FormSelect></FormField>
       </div>
-      <FormField label="Detect"><FormInput value={form.detect} onChange={update('detect')} placeholder="How was this detected?" /></FormField>
-      <FormField label="Assess"><FormInput value={form.assess} onChange={update('assess')} placeholder="Assessment notes" /></FormField>
-      <FormField label="Respond"><FormInput value={form.respond} onChange={update('respond')} placeholder="Response plan" /></FormField>
+      <FormField label="Detect"><FormTextarea value={form.detect} onChange={update('detect')} placeholder="How was this detected?" /></FormField>
+      <FormField label="Assess"><FormTextarea value={form.assess} onChange={update('assess')} placeholder="Assessment notes" /></FormField>
+      <FormField label="Respond"><FormTextarea value={form.respond} onChange={update('respond')} placeholder="Response plan" /></FormField>
       <div className="flex gap-2.5 mt-5">
         <button onClick={onClose} className="flex-1 border border-border bg-background text-muted-foreground rounded-lg py-2.5 font-semibold text-sm hover:text-foreground transition-all">Cancel</button>
         <button onClick={submit} className="flex-1 bg-success text-success-foreground rounded-lg py-2.5 font-semibold text-sm hover:opacity-90 transition-all">Detect Element</button>
